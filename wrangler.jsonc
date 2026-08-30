@@ -10,8 +10,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "dashboard-db",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+      "database_name": "aqarx-db",
+      "database_id": "8d796cf2-a5a4-486c-b830-62e15077ace8"
     }
   ],
   "observability": {

@@ -3,7 +3,8 @@ import axios from 'axios';
 // Centralized API client.
 // In production the API and the SPA are served by the SAME Cloudflare Worker,
 // so requests go to the same origin at "/api". Override with REACT_APP_API_URL
-// for local development against the Express backend (e.g. http://localhost:5000/api).
+// for local `npm start` against a running Worker (e.g. http://localhost:8787/api
+// from `npx wrangler dev`).
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || '/api',
 });

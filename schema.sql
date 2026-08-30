@@ -1,6 +1,6 @@
 -- EstateHub D1 (SQLite) schema
 -- Apply with:
---   npx wrangler d1 execute dashboard-db --remote --file=./schema.sql
+--   npx wrangler d1 execute aqarx-db --remote --file=./schema.sql
 -- SQLite notes vs Postgres:
 --   SERIAL            -> INTEGER PRIMARY KEY AUTOINCREMENT
 --   JSONB             -> TEXT (store JSON.stringify'd values)

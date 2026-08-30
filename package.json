@@ -2,12 +2,15 @@
   "name": "dashboard-worker",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "description": "EstateHub full-stack Cloudflare Worker (API + SPA) backed by D1",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:local": "wrangler d1 execute dashboard-db --local --file=./schema.sql",
-    "db:remote": "wrangler d1 execute dashboard-db --remote --file=./schema.sql"
+    "db:local": "wrangler d1 execute aqarx-db --local --file=./schema.sql",
+    "db:remote": "wrangler d1 execute aqarx-db --remote --file=./schema.sql"
   },
   "dependencies": {
     "hono": "^4.6.14"

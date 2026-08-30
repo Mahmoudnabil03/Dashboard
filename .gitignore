@@ -28,10 +28,6 @@ yarn-error.log*
 logs
 *.log
 
-# Uploads
-/backend/uploads/*
-!/backend/uploads/.gitkeep
-
 # Editor / OS
 .DS_Store
 Thumbs.db
