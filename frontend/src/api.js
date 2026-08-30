@@ -18,15 +18,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// If the token is rejected, bounce back to login.
+// If the token is rejected on an authenticated route, clear session and redirect.
+// Ignore 401s from /auth/* (failed login/register should not log you out).
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      const url = error.config?.url || '';
+      if (!url.includes('/auth/')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new Event('storage'));
+        if (window.location.pathname !== '/login') {
+          window.location.replace('/login');
+        }
       }
     }
     return Promise.reject(error);

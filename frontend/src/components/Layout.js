@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../App';
 import {
   LayoutDashboard, Home, Send, CalendarDays, MessageSquare, Users, Bot, Link2, LogOut,
 } from 'lucide-react';
@@ -17,12 +18,12 @@ const navItems = [
 
 export default function Layout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    logout();
+    navigate('/login', { replace: true });
   };
 
   return (

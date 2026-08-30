@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
+import { useAuth } from '../App';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +14,7 @@ export default function Login() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,11 +24,10 @@ export default function Login() {
       const endpoint = isLogin ? 'login' : 'register';
       const response = await api.post(`/auth/${endpoint}`, formData);
       
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      login(response.data.token, response.data.user);
       
       toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.error || 'Something went wrong');
     } finally {

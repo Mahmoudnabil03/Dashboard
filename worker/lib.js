@@ -108,7 +108,7 @@ export const authMiddleware = async (c, next) => {
     return c.json({ error: 'Access denied. No token provided.' }, 401);
   }
   try {
-    const payload = await verify(token, c.env.JWT_SECRET);
+    const payload = await verify(token, c.env.JWT_SECRET, 'HS256');
     c.set('userId', payload.id);
     await next();
   } catch {

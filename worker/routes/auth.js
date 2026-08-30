@@ -8,7 +8,7 @@ const WEEK = 60 * 60 * 24 * 7;
 
 function makeToken(user, secret) {
   const now = Math.floor(Date.now() / 1000);
-  return sign({ id: user.id, email: user.email, exp: now + WEEK }, secret);
+  return sign({ id: user.id, email: user.email, exp: now + WEEK }, secret, 'HS256');
 }
 
 // Register
