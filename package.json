@@ -8,7 +8,8 @@
   "description": "EstateHub full-stack Cloudflare Worker (API + SPA) backed by D1",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "build": "cd frontend && npm install && CI=true npm run build",
+    "deploy": "npm run build && wrangler deploy",
     "db:local": "wrangler d1 execute aqarx-db --local --file=./schema.sql",
     "db:remote": "wrangler d1 execute aqarx-db --remote --file=./schema.sql"
   },
