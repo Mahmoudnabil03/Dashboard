@@ -4,6 +4,7 @@ import { Mail, Lock, User, LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
 import { useAuth } from '../App';
+import Logo from '../components/Logo';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,12 +39,12 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">SocialHub</h1>
-          <p className="text-gray-500 mt-2">
-            {isLogin ? 'Welcome back to your dashboard' : 'Create your account'}
-          </p>
+        <div className="flex justify-center mb-8">
+          <Logo size={54} textSize="3xl" />
         </div>
+        <p className="text-center text-gray-500 mb-8 -mt-4">
+          {isLogin ? 'Welcome back to SocialHub' : 'Create your SocialHub account'}
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (

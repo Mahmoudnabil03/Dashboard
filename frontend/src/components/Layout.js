@@ -1,18 +1,16 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+import Logo from './Logo';
 import {
-  LayoutDashboard, Home, Send, CalendarDays, MessageSquare, Users, Bot, Link2, LogOut,
+  LayoutDashboard, Send, CalendarDays, MessageSquare, Link2, LogOut,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/properties', label: 'Properties', icon: Home },
   { to: '/posts', label: 'Posts', icon: Send },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/comments', label: 'Comments', icon: MessageSquare },
-  { to: '/leads', label: 'Leads', icon: Users },
-  { to: '/ai-agent', label: 'AI Agent', icon: Bot },
   { to: '/accounts', label: 'Accounts', icon: Link2 },
 ];
 
@@ -30,9 +28,8 @@ export default function Layout() {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-blue-600">EstateHub</h1>
-          <p className="text-sm text-gray-500">Real Estate Social Manager</p>
+        <div className="p-6 border-b">
+          <Logo size={42} textSize="2xl" />
         </div>
 
         <nav className="mt-2 flex-1 overflow-y-auto">

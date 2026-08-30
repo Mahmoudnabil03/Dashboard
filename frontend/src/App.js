@@ -4,12 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Properties from './pages/Properties';
 import Posts from './pages/Posts';
 import Calendar from './pages/Calendar';
 import Comments from './pages/Comments';
-import Leads from './pages/Leads';
-import AIAgent from './pages/AIAgent';
 import Accounts from './pages/Accounts';
 import Layout from './components/Layout';
 
@@ -71,12 +68,9 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Layout />}>
                 <Route index element={<Dashboard />} />
-                <Route path="properties" element={<Properties />} />
                 <Route path="posts" element={<Posts />} />
                 <Route path="calendar" element={<Calendar />} />
                 <Route path="comments" element={<Comments />} />
-                <Route path="leads" element={<Leads />} />
-                <Route path="ai-agent" element={<AIAgent />} />
                 <Route path="accounts" element={<Accounts />} />
               </Route>
             </Route>

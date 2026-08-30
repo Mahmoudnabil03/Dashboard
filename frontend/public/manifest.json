@@ -1,6 +1,6 @@
 {
-  "short_name": "EstateHub",
-  "name": "EstateHub - Real Estate Social Manager",
+  "short_name": "SocialHub",
+  "name": "SocialHub — Manage. Connect. Grow.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#2563eb",
+  "theme_color": "#0A5BFF",
   "background_color": "#ffffff"
 }
