@@ -18,14 +18,14 @@ auth.post('/register', async (c) => {
     return c.json({ error: 'Email and password are required' }, 400);
   }
 
-  const existing = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+  const existing = await c.env.DB.prepare('SELECT id FROM dashboard_users WHERE email = ?').bind(email).first();
   if (existing) {
     return c.json({ error: 'User already exists' }, 400);
   }
 
   const hashed = await hashPassword(password);
   const user = await c.env.DB
-    .prepare('INSERT INTO users (email, password, name) VALUES (?, ?, ?) RETURNING id, email, name')
+    .prepare('INSERT INTO dashboard_users (email, password, name) VALUES (?, ?, ?) RETURNING id, email, name')
     .bind(email, hashed, name || null)
     .first();
 
@@ -37,7 +37,7 @@ auth.post('/register', async (c) => {
 auth.post('/login', async (c) => {
   const { email, password } = await body(c);
 
-  const user = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
+  const user = await c.env.DB.prepare('SELECT * FROM dashboard_users WHERE email = ?').bind(email).first();
   if (!user) {
     return c.json({ error: 'Invalid credentials' }, 401);
   }

@@ -13,7 +13,7 @@ leads.post('/', async (c) => {
   const status = VALID_STATUSES.includes(b.status) ? b.status : 'new';
 
   const row = await c.env.DB.prepare(
-    `INSERT INTO leads
+    `INSERT INTO dashboard_leads
       (user_id, property_id, name, email, phone, source, platform, message, status, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING *`
@@ -40,15 +40,15 @@ leads.post('/from-comment', async (c) => {
 
   const comment = await c.env.DB.prepare(
     `SELECT c.*, p.platform AS post_platform
-     FROM comments c
-     LEFT JOIN posts p ON c.post_id = p.id
+     FROM dashboard_comments c
+     LEFT JOIN dashboard_posts p ON c.post_id = p.id
      WHERE c.id = ? AND c.user_id = ?`
   ).bind(comment_id, userId).first();
 
   if (!comment) return c.json({ error: 'Comment not found' }, 404);
 
   const existing = await c.env.DB
-    .prepare('SELECT id FROM leads WHERE comment_id = ? AND user_id = ?')
+    .prepare('SELECT id FROM dashboard_leads WHERE comment_id = ? AND user_id = ?')
     .bind(comment_id, userId)
     .first();
   if (existing) {
@@ -56,7 +56,7 @@ leads.post('/from-comment', async (c) => {
   }
 
   const row = await c.env.DB.prepare(
-    `INSERT INTO leads
+    `INSERT INTO dashboard_leads
       (user_id, property_id, comment_id, name, source, platform, message, status)
      VALUES (?, ?, ?, ?, 'comment', ?, ?, 'new')
      RETURNING *`
@@ -79,8 +79,8 @@ leads.get('/', async (c) => {
 
   let sql = `
     SELECT l.*, p.title AS property_title, p.address AS property_address
-    FROM leads l
-    LEFT JOIN properties p ON l.property_id = p.id
+    FROM dashboard_leads l
+    LEFT JOIN dashboard_properties p ON l.property_id = p.id
     WHERE l.user_id = ?`;
   const params = [userId];
   if (status) {
@@ -103,7 +103,7 @@ leads.get('/stats/summary', async (c) => {
        SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END) AS contacted,
        SUM(CASE WHEN status = 'qualified' THEN 1 ELSE 0 END) AS qualified,
        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) AS closed
-     FROM leads WHERE user_id = ?`
+     FROM dashboard_leads WHERE user_id = ?`
   ).bind(userId).first();
 
   return c.json({
@@ -122,7 +122,7 @@ leads.put('/:id', async (c) => {
   const status = VALID_STATUSES.includes(b.status) ? b.status : 'new';
 
   const row = await c.env.DB.prepare(
-    `UPDATE leads SET
+    `UPDATE dashboard_leads SET
        name = ?, email = ?, phone = ?, platform = ?, message = ?,
        property_id = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
      WHERE id = ? AND user_id = ?
@@ -153,7 +153,7 @@ leads.patch('/:id/status', async (c) => {
   }
 
   const row = await c.env.DB
-    .prepare('UPDATE leads SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
+    .prepare('UPDATE dashboard_leads SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
     .bind(status, c.req.param('id'), userId)
     .first();
 
@@ -165,7 +165,7 @@ leads.patch('/:id/status', async (c) => {
 leads.delete('/:id', async (c) => {
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('DELETE FROM leads WHERE id = ? AND user_id = ? RETURNING id')
+    .prepare('DELETE FROM dashboard_leads WHERE id = ? AND user_id = ? RETURNING id')
     .bind(c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Lead not found' }, 404);

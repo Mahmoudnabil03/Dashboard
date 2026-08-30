@@ -15,7 +15,7 @@ function callbackUrl(c, platform) {
 
 async function upsertAccount(c, userId, platform, username, accessToken, refreshToken, data) {
   await c.env.DB.prepare(
-    `INSERT INTO social_accounts (user_id, platform, username, access_token, refresh_token, account_data)
+    `INSERT INTO dashboard_social_accounts (user_id, platform, username, access_token, refresh_token, account_data)
      VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id, platform) DO UPDATE SET
        username = excluded.username,
@@ -32,7 +32,7 @@ async function upsertAccount(c, userId, platform, username, accessToken, refresh
 social.get('/accounts', authMiddleware, async (c) => {
   const userId = c.get('userId');
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM social_accounts WHERE user_id = ? ORDER BY platform, created_at DESC')
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE user_id = ? ORDER BY platform, created_at DESC')
     .bind(userId)
     .all();
   return c.json(results.map(parseAccount));
@@ -42,7 +42,7 @@ social.get('/accounts', authMiddleware, async (c) => {
 social.delete('/accounts/:id', authMiddleware, async (c) => {
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('DELETE FROM social_accounts WHERE id = ? AND user_id = ? RETURNING id')
+    .prepare('DELETE FROM dashboard_social_accounts WHERE id = ? AND user_id = ? RETURNING id')
     .bind(c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Account not found' }, 404);
@@ -56,8 +56,8 @@ social.get('/comments/:postId', authMiddleware, async (c) => {
   const userId = c.get('userId');
   const { results } = await c.env.DB.prepare(
     `SELECT c.*, p.content AS post_content
-     FROM comments c
-     LEFT JOIN posts p ON c.post_id = p.id
+     FROM dashboard_comments c
+     LEFT JOIN dashboard_posts p ON c.post_id = p.id
      WHERE c.post_id = ? AND c.user_id = ?
      ORDER BY c.created_at DESC`
   ).bind(c.req.param('postId'), userId).all();
@@ -71,9 +71,9 @@ social.post('/comments/reply', authMiddleware, async (c) => {
 
   const comment = await c.env.DB.prepare(
     `SELECT c.*, s.access_token, s.platform, s.account_data
-     FROM comments c
-     JOIN posts p ON c.post_id = p.id
-     JOIN social_accounts s ON p.account_id = s.id
+     FROM dashboard_comments c
+     JOIN dashboard_posts p ON c.post_id = p.id
+     JOIN dashboard_social_accounts s ON p.account_id = s.id
      WHERE c.id = ? AND c.user_id = ?`
   ).bind(commentId, userId).first();
 
@@ -86,7 +86,7 @@ social.post('/comments/reply', authMiddleware, async (c) => {
   }
 
   await c.env.DB
-    .prepare('UPDATE comments SET replied = 1, ai_response = ? WHERE id = ? AND user_id = ?')
+    .prepare('UPDATE dashboard_comments SET replied = 1, ai_response = ? WHERE id = ? AND user_id = ?')
     .bind(reply, commentId, userId)
     .run();
 

@@ -11,7 +11,7 @@ posts.post('/', async (c) => {
   const status = b.scheduled_time ? 'scheduled' : 'draft';
 
   const row = await c.env.DB.prepare(
-    `INSERT INTO posts
+    `INSERT INTO dashboard_posts
       (user_id, account_id, property_id, content, media_urls, scheduled_time, platform, status)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING *`
@@ -33,7 +33,7 @@ posts.post('/', async (c) => {
 posts.get('/', async (c) => {
   const userId = c.get('userId');
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC')
+    .prepare('SELECT * FROM dashboard_posts WHERE user_id = ? ORDER BY created_at DESC')
     .bind(userId)
     .all();
   return c.json(results.map(parsePost));
@@ -44,7 +44,7 @@ posts.patch('/:id/status', async (c) => {
   const { status } = await body(c);
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('UPDATE posts SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
+    .prepare('UPDATE dashboard_posts SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
     .bind(status, c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Post not found' }, 404);
@@ -55,7 +55,7 @@ posts.patch('/:id/status', async (c) => {
 posts.delete('/:id', async (c) => {
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('DELETE FROM posts WHERE id = ? AND user_id = ? RETURNING id')
+    .prepare('DELETE FROM dashboard_posts WHERE id = ? AND user_id = ? RETURNING id')
     .bind(c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Post not found' }, 404);

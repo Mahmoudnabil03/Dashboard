@@ -10,7 +10,7 @@ properties.post('/', async (c) => {
   const userId = c.get('userId');
 
   const row = await c.env.DB.prepare(
-    `INSERT INTO properties
+    `INSERT INTO dashboard_properties
       (user_id, title, address, city, state, zip, price, bedrooms, bathrooms,
        sqft, property_type, status, description, features, image_urls, listing_date)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -42,7 +42,7 @@ properties.get('/', async (c) => {
   const userId = c.get('userId');
   const status = c.req.query('status');
 
-  let sql = 'SELECT * FROM properties WHERE user_id = ?';
+  let sql = 'SELECT * FROM dashboard_properties WHERE user_id = ?';
   const params = [userId];
   if (status) {
     sql += ' AND status = ?';
@@ -64,7 +64,7 @@ properties.get('/stats/summary', async (c) => {
        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
        SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) AS sold,
        COALESCE(SUM(CASE WHEN status = 'available' THEN price ELSE 0 END), 0) AS available_value
-     FROM properties WHERE user_id = ?`
+     FROM dashboard_properties WHERE user_id = ?`
   ).bind(userId).first();
 
   return c.json({
@@ -80,7 +80,7 @@ properties.get('/stats/summary', async (c) => {
 properties.get('/:id', async (c) => {
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('SELECT * FROM properties WHERE id = ? AND user_id = ?')
+    .prepare('SELECT * FROM dashboard_properties WHERE id = ? AND user_id = ?')
     .bind(c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Property not found' }, 404);
@@ -93,7 +93,7 @@ properties.put('/:id', async (c) => {
   const userId = c.get('userId');
 
   const row = await c.env.DB.prepare(
-    `UPDATE properties SET
+    `UPDATE dashboard_properties SET
        title = ?, address = ?, city = ?, state = ?, zip = ?,
        price = ?, bedrooms = ?, bathrooms = ?, sqft = ?,
        property_type = ?, status = ?, description = ?,
@@ -131,7 +131,7 @@ properties.patch('/:id/status', async (c) => {
   const userId = c.get('userId');
 
   const row = await c.env.DB
-    .prepare('UPDATE properties SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
+    .prepare('UPDATE dashboard_properties SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
     .bind(status, c.req.param('id'), userId)
     .first();
 
@@ -143,7 +143,7 @@ properties.patch('/:id/status', async (c) => {
 properties.delete('/:id', async (c) => {
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('DELETE FROM properties WHERE id = ? AND user_id = ? RETURNING id')
+    .prepare('DELETE FROM dashboard_properties WHERE id = ? AND user_id = ? RETURNING id')
     .bind(c.req.param('id'), userId)
     .first();
   if (!row) return c.json({ error: 'Property not found' }, 404);

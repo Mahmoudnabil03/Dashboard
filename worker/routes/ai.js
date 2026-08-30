@@ -54,7 +54,7 @@ ai.post('/agents', async (c) => {
   const { name, description, config } = await body(c);
   const userId = c.get('userId');
   const row = await c.env.DB
-    .prepare('INSERT INTO ai_agents (user_id, name, description, config) VALUES (?, ?, ?, ?) RETURNING *')
+    .prepare('INSERT INTO dashboard_ai_agents (user_id, name, description, config) VALUES (?, ?, ?, ?) RETURNING *')
     .bind(userId, name || null, description || null, JSON.stringify(config || {}))
     .first();
   return c.json(parseAgent(row), 201);
@@ -64,7 +64,7 @@ ai.post('/agents', async (c) => {
 ai.get('/agents', async (c) => {
   const userId = c.get('userId');
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM ai_agents WHERE user_id = ?')
+    .prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ?')
     .bind(userId)
     .all();
   return c.json(results.map(parseAgent));
@@ -95,7 +95,7 @@ ai.post('/reply-comment', async (c) => {
 
     if (agentId) {
       await c.env.DB.prepare(
-        `INSERT INTO ai_tasks (agent_id, task_type, input_data, output_data, status, completed_at)
+        `INSERT INTO dashboard_ai_tasks (agent_id, task_type, input_data, output_data, status, completed_at)
          VALUES (?, 'comment_reply', ?, ?, 'completed', CURRENT_TIMESTAMP)`
       ).bind(agentId, JSON.stringify({ comment, context }), JSON.stringify({ reply })).run();
     }
@@ -126,7 +126,7 @@ ai.post('/generate-listing-post', async (c) => {
   const userId = c.get('userId');
 
   const raw = await c.env.DB
-    .prepare('SELECT * FROM properties WHERE id = ? AND user_id = ?')
+    .prepare('SELECT * FROM dashboard_properties WHERE id = ? AND user_id = ?')
     .bind(propertyId, userId)
     .first();
   if (!raw) return c.json({ error: 'Property not found' }, 404);

@@ -9,7 +9,7 @@
 --   NUMERIC/REAL      -> REAL
 --   TIMESTAMP default -> TEXT DEFAULT CURRENT_TIMESTAMP
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS dashboard_users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS social_accounts (
+CREATE TABLE IF NOT EXISTS dashboard_social_accounts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
   platform TEXT NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS social_accounts (
   UNIQUE (user_id, platform)
 );
 
-CREATE TABLE IF NOT EXISTS properties (
+CREATE TABLE IF NOT EXISTS dashboard_properties (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
   title TEXT,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS properties (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS posts (
+CREATE TABLE IF NOT EXISTS dashboard_posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
   account_id INTEGER,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS posts (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS comments (
+CREATE TABLE IF NOT EXISTS dashboard_comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER,
   user_id INTEGER,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS comments (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS leads (
+CREATE TABLE IF NOT EXISTS dashboard_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
   property_id INTEGER,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS leads (
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS ai_agents (
+CREATE TABLE IF NOT EXISTS dashboard_ai_agents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER,
   name TEXT,
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS ai_agents (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS ai_tasks (
+CREATE TABLE IF NOT EXISTS dashboard_ai_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   agent_id INTEGER,
   task_type TEXT,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS ai_tasks (
   completed_at TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_properties_user ON properties(user_id);
-CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id);
-CREATE INDEX IF NOT EXISTS idx_leads_user ON leads(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_dashboard_properties_user ON dashboard_properties(user_id);
+CREATE INDEX IF NOT EXISTS idx_dashboard_posts_user ON dashboard_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_dashboard_leads_user ON dashboard_leads(user_id);
+CREATE INDEX IF NOT EXISTS idx_dashboard_comments_user ON dashboard_comments(user_id);
