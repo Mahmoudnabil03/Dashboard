@@ -1,5 +1,5 @@
 {
-  "name": "social-media-dashboard",
+  "name": "dashboard",
   "compatibility_date": "2025-08-01",
   "assets": {
     "directory": "./frontend/build",
