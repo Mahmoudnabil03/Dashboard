@@ -64,10 +64,39 @@ ai.post('/agents', async (c) => {
 ai.get('/agents', async (c) => {
   const userId = c.get('userId');
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ?')
+    .prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ? ORDER BY created_at DESC')
     .bind(userId)
     .all();
   return c.json(results.map(parseAgent));
+});
+
+// TOGGLE SINGLE AGENT ON/OFF
+ai.patch('/agents/:id/toggle', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const row = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE id = ? AND user_id = ?').bind(id, userId).first();
+  if (!row) return c.json({ error: 'Agent not found' }, 404);
+  const next = row.is_active ? 0 : 1;
+  const updated = await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE id = ? AND user_id = ? RETURNING *').bind(next, id, userId).first();
+  return c.json(parseAgent(updated));
+});
+
+// TOGGLE ALL AGENTS ON/OFF (master switch)
+ai.post('/agents/toggle-all', async (c) => {
+  const userId = c.get('userId');
+  const { is_active } = await body(c);
+  const val = is_active ? 1 : 0;
+  await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE user_id = ?').bind(val, userId).run();
+  const { results } = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ?').bind(userId).all();
+  return c.json(results.map(parseAgent));
+});
+
+// DELETE AGENT
+ai.delete('/agents/:id', async (c) => {
+  const userId = c.get('userId');
+  const row = await c.env.DB.prepare('DELETE FROM dashboard_ai_agents WHERE id = ? AND user_id = ? RETURNING id').bind(c.req.param('id'), userId).first();
+  if (!row) return c.json({ error: 'Agent not found' }, 404);
+  return c.json({ message: 'Agent deleted' });
 });
 
 // GENERATE CONTENT
@@ -84,14 +113,23 @@ ai.post('/generate-content', async (c) => {
   }
 });
 
-// REPLY TO COMMENT (AI-generated)
+// REPLY TO COMMENT / CHAT (AI-generated) — respects ON/OFF toggle
 ai.post('/reply-comment', async (c) => {
   const { comment, context, agentId } = await body(c);
+  const userId = c.get('userId');
+  // If any agent check: if agentId provided, ensure it's active; else need at least one active agent
+  if (agentId) {
+    const ag = await c.env.DB.prepare('SELECT is_active FROM dashboard_ai_agents WHERE id = ? AND user_id = ?').bind(agentId, userId).first();
+    if (ag && !ag.is_active) return c.json({ error: 'AI agent is OFF. Turn it on to auto-reply.' }, 403);
+  } else {
+    const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE user_id = ? AND is_active = 1 LIMIT 1').bind(userId).first();
+    if (!any) return c.json({ error: 'No active AI agent. Turn ON the AI agent to reply.' }, 403);
+  }
   try {
     const reply = await openaiChat(c.env, [
-      { role: 'system', content: 'You are a social media manager. Generate a professional and engaging reply to the following comment. Keep it concise and friendly.' },
-      { role: 'user', content: `Comment: ${comment}\nContext: ${context || 'General social media post'}` },
-    ], 150);
+      { role: 'system', content: 'You are SocialHub AI — a friendly social media manager. Reply to chats and comments concisely, helpfully, on-brand. Keep tone warm and professional.' },
+      { role: 'user', content: `Comment/Chat: ${comment}\nContext: ${context || 'General social media post or WhatsApp chat'}` },
+    ], 200);
 
     if (agentId) {
       await c.env.DB.prepare(
@@ -103,6 +141,23 @@ ai.post('/reply-comment', async (c) => {
     return c.json({ reply });
   } catch (err) {
     return c.json({ error: err.message }, err.code === 'NO_KEY' ? 400 : 500);
+  }
+});
+
+// AUTO-REPLY: generate + optionally post to platform via social layer (proxy)
+ai.post('/auto-reply', async (c) => {
+  const { commentId, comment, context } = await body(c);
+  const userId = c.get('userId');
+  const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE user_id = ? AND is_active = 1 LIMIT 1').bind(userId).first();
+  if (!any) return c.json({ error: 'AI agent is OFF' }, 403);
+  try {
+    const reply = await openaiChat(c.env, [
+      { role: 'system', content: 'You are SocialHub AI. Generate a concise, friendly reply to this chat/comment.' },
+      { role: 'user', content: `Message: ${comment}\nContext: ${context || ''}` },
+    ], 150);
+    return c.json({ reply, canPost: !!commentId });
+  } catch (err) {
+    return c.json({ error: err.message }, 500);
   }
 });
 

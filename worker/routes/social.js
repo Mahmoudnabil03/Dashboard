@@ -13,6 +13,10 @@ function callbackUrl(c, platform) {
   return c.env[key] || `${new URL(c.req.url).origin}/api/social/${platform}/callback`;
 }
 
+function configured(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 async function upsertAccount(c, userId, platform, username, accessToken, refreshToken, data) {
   await c.env.DB.prepare(
     `INSERT INTO dashboard_social_accounts (user_id, platform, username, access_token, refresh_token, account_data)
@@ -105,6 +109,16 @@ async function postReply(comment, reply) {
       return fetchJSON(`https://graph.instagram.com/${comment.comment_id}/replies?${new URLSearchParams({ message: reply, access_token: comment.access_token })}`, { method: 'POST' });
     case 'facebook':
       return fetchJSON(`https://graph.facebook.com/${comment.comment_id}/comments?${new URLSearchParams({ message: reply, access_token: comment.access_token })}`, { method: 'POST' });
+    case 'whatsapp': {
+      // WhatsApp Cloud API - send message to user who commented (comment_id is phone id)
+      const data = typeof comment.account_data === 'string' ? JSON.parse(comment.account_data || '{}') : (comment.account_data || {});
+      const phoneId = data.phone_number_id || data.id;
+      return fetchJSON(`https://graph.facebook.com/v18.0/${phoneId}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${comment.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', to: comment.comment_id, type: 'text', text: { body: reply } }),
+      });
+    }
     case 'linkedin': {
       const data = typeof comment.account_data === 'string' ? JSON.parse(comment.account_data || '{}') : (comment.account_data || {});
       return fetchJSON(`https://api.linkedin.com/v2/socialActions/${comment.comment_id}/comments`, {
@@ -116,6 +130,14 @@ async function postReply(comment, reply) {
     default:
       throw new Error('Unsupported platform');
   }
+}
+
+function oauthPopupHtml(success, platform, error) {
+  const payload = JSON.stringify({ type: 'oauth_callback', success, platform, error: error || null });
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${success ? 'Connected' : 'Failed'}</title></head><body style="font-family:sans-serif;background:#020617;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><h2 style="color:${success ? '#22c55e' : '#ef4444'}">${success ? '✓ ' + platform + ' connected!' : '✗ Connection failed'}</h2><p style="color:#94a3b8">${success ? 'You can close this window.' : (error || 'Try again')}</p></div><script>
+    try { if (window.opener) window.opener.postMessage(${payload}, '*'); } catch(e) {}
+    setTimeout(() => window.close(), 1200);
+  <\/script></body></html>`;
 }
 
 async function fetchJSON(url, options) {
@@ -175,8 +197,43 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         state: String(userId),
       });
       break;
+    case 'tiktok':
+      url = 'https://www.tiktok.com/v2/auth/authorize/?' + new URLSearchParams({
+        client_key: c.env.TIKTOK_CLIENT_KEY || '',
+        response_type: 'code',
+        scope: 'user.info.basic,video.publish,video.upload',
+        redirect_uri: redirectUri,
+        state: String(userId),
+      });
+      break;
+    case 'whatsapp':
+      // WhatsApp Business via Meta Facebook Login
+      url = 'https://www.facebook.com/v18.0/dialog/oauth?' + new URLSearchParams({
+        client_id: c.env.FACEBOOK_CLIENT_ID || c.env.WHATSAPP_CLIENT_ID || '',
+        redirect_uri: redirectUri,
+        scope: 'whatsapp_business_messaging,whatsapp_business_management,public_profile',
+        response_type: 'code',
+        state: String(userId),
+      });
+      break;
     default:
       return c.json({ error: 'Unsupported platform' }, 400);
+  }
+
+  const clientConfigured = platform === 'twitter'
+    ? configured(c.env.TWITTER_CLIENT_ID)
+    : platform === 'tiktok'
+      ? configured(c.env.TIKTOK_CLIENT_KEY)
+      : platform === 'whatsapp'
+        ? configured(c.env.WHATSAPP_CLIENT_ID || c.env.FACEBOOK_CLIENT_ID)
+        : platform === 'instagram'
+          ? configured(c.env.INSTAGRAM_CLIENT_ID)
+          : platform === 'facebook'
+            ? configured(c.env.FACEBOOK_CLIENT_ID)
+            : configured(c.env.LINKEDIN_CLIENT_ID);
+  if (!clientConfigured) {
+    const key = platform === 'tiktok' ? 'TIKTOK_CLIENT_KEY' : platform === 'whatsapp' ? 'WHATSAPP_CLIENT_ID or FACEBOOK_CLIENT_ID' : `${platform.toUpperCase()}_CLIENT_ID`;
+    return c.json({ error: `OAuth is not configured for ${platform}. Add ${key} as a Worker secret. Callback URL: ${redirectUri}` }, 503);
   }
 
   return c.json({ authUrl: url });
@@ -249,13 +306,45 @@ social.get('/:platform/callback', async (c) => {
         headers: { Authorization: `Bearer ${token.access_token}` },
       });
       await upsertAccount(c, state, 'linkedin', me.name || me.email, token.access_token, token.refresh_token, me);
+    } else if (platform === 'tiktok') {
+      const token = await fetchJSON('https://open.tiktokapis.com/v2/oauth/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_key: c.env.TIKTOK_CLIENT_KEY || '',
+          client_secret: c.env.TIKTOK_CLIENT_SECRET || '',
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }),
+      });
+      const me = await fetchJSON('https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name,username', {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+      });
+      const profile = me.data?.user || {};
+      await upsertAccount(c, state, 'tiktok', profile.username || profile.display_name || 'TikTok', token.access_token, token.refresh_token, profile);
+    } else if (platform === 'whatsapp') {
+      const token = await fetchJSON('https://graph.facebook.com/v18.0/oauth/access_token?' + new URLSearchParams({
+        client_id: c.env.FACEBOOK_CLIENT_ID || c.env.WHATSAPP_CLIENT_ID || '', client_secret: c.env.FACEBOOK_CLIENT_SECRET || c.env.WHATSAPP_CLIENT_SECRET || '',
+        redirect_uri: redirectUri, code,
+      }));
+      // Get WABA phone numbers
+      const waba = await fetchJSON('https://graph.facebook.com/v18.0/me/businesses?' + new URLSearchParams({ access_token: token.access_token })).catch(() => ({ data: [] }));
+      const debug = await fetchJSON('https://graph.facebook.com/v18.0/me?' + new URLSearchParams({ fields: 'id,name', access_token: token.access_token })).catch(() => ({ id: 'whatsapp', name: 'WhatsApp Business' }));
+      // Try to get phone numbers if WABA exists
+      let phoneData = debug;
+      if (waba.data?.[0]?.id) {
+        const phones = await fetchJSON(`https://graph.facebook.com/v18.0/${waba.data[0].id}/phone_numbers?` + new URLSearchParams({ access_token: token.access_token })).catch(() => null);
+        if (phones?.data?.[0]) phoneData = { ...debug, phone_number_id: phones.data[0].id, display_phone_number: phones.data[0].display_phone_number };
+      }
+      await upsertAccount(c, state, 'whatsapp', phoneData.display_phone_number || phoneData.name || 'WhatsApp', token.access_token, token.refresh_token, phoneData);
     } else {
-      return c.redirect(`${base}/?error=unsupported_platform`);
+      return c.html(oauthPopupHtml(false, platform, 'Unsupported platform'), 400);
     }
 
-    return c.redirect(`${base}/?connected=${platform}`);
+    return c.html(oauthPopupHtml(true, platform), 200);
   } catch (err) {
-    return c.redirect(`${base}/?error=${platform}_auth_failed`);
+    return c.html(oauthPopupHtml(false, platform, String(err.message || err).slice(0, 180)), 200);
   }
 });
 

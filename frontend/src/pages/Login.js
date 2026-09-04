@@ -37,28 +37,31 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* glow */}
+      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#0A5BFF] opacity-20 blur-[120px] rounded-full" />
+      <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-violet-600 opacity-15 blur-[120px] rounded-full" />
+      <div className="bg-[#0f172a] border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
         <div className="flex justify-center mb-8">
-          <Logo size={54} textSize="3xl" />
+          <Logo size={58} dark />
         </div>
-        <p className="text-center text-gray-500 mb-8 -mt-4">
+        <p className="text-center text-slate-400 mb-8 -mt-4">
           {isLogin ? 'Welcome back to SocialHub' : 'Create your SocialHub account'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-[#0A5BFF] focus:border-transparent text-white placeholder-slate-500"
                   placeholder="John Doe"
                   required={!isLogin}
                 />
@@ -67,16 +70,16 @@ export default function Login() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-300 mb-1">
               Email Address
             </label>
             <div className="relative">
-              <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-[#0A5BFF] focus:border-transparent text-white placeholder-slate-500"
                 placeholder="you@example.com"
                 required
               />
@@ -84,16 +87,16 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-300 mb-1">
               Password
             </label>
             <div className="relative">
-              <Lock size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Lock size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
               <input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-[#0A5BFF] focus:border-transparent text-white placeholder-slate-500"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -104,7 +107,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-50"
+            className="w-full bg-[#0A5BFF] text-white py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-50 font-medium shadow shadow-blue-900/30"
           >
             <LogIn size={20} className="mr-2" />
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
@@ -114,7 +117,7 @@ export default function Login() {
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-600 hover:text-blue-700 text-sm"
+            className="text-[#0A5BFF] hover:text-blue-400 text-sm"
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>

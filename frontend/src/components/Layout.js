@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import Logo from './Logo';
 import {
-  LayoutDashboard, Send, CalendarDays, MessageSquare, Link2, LogOut,
+  LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut,
 } from 'lucide-react';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { to: '/posts', label: 'Posts', icon: Send },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/comments', label: 'Comments', icon: MessageSquare },
+  { to: '/ai-agent', label: 'AI Agent', icon: Bot },
   { to: '/accounts', label: 'Accounts', icon: Link2 },
 ];
 
@@ -25,11 +26,10 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="p-6 border-b">
-          <Logo size={42} textSize="2xl" />
+    <div className="flex min-h-screen bg-[#f2f0eb] text-[#292827]">
+      <div className="w-64 bg-white/70 backdrop-blur-xl border-r border-[#e3e3e2] flex flex-col">
+        <div className="p-6 border-b border-[#e3e3e2]">
+          <Logo size={42} />
         </div>
 
         <nav className="mt-2 flex-1 overflow-y-auto">
@@ -41,8 +41,8 @@ export default function Layout() {
               className={({ isActive }) =>
                 `flex items-center px-6 py-3 transition border-l-4 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-600 border-blue-600'
-                    : 'text-gray-700 border-transparent hover:bg-blue-50 hover:text-blue-600'
+                    ? 'bg-[#d4c7ff]/50 text-[#421d24] border-[#421d24]'
+                    : 'text-[#666666] border-transparent hover:bg-[#f2f0eb] hover:text-[#292827]'
                 }`
               }
             >
@@ -52,16 +52,16 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-[#e3e3e2]">
           {user?.name && (
             <div className="px-2 pb-3">
-              <p className="text-sm font-medium text-gray-700 truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              <p className="text-sm font-medium text-[#292827] truncate">{user.name}</p>
+              <p className="text-xs text-[#666666] truncate">{user.email}</p>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 transition w-full rounded-lg"
+            className="flex items-center px-4 py-3 text-[#666666] hover:bg-[#f2f0eb] hover:text-[#421d24] transition w-full rounded-lg"
           >
             <LogOut size={20} className="mr-3" />
             Logout
@@ -70,7 +70,7 @@ export default function Layout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-[#f2f0eb]">
         <div className="p-8">
           <Outlet />
         </div>

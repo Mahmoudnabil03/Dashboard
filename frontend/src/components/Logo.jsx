@@ -1,44 +1,32 @@
 import React from 'react';
 
-export default function Logo({ size = 40, showText = true, textSize = 'xl' }) {
+export default function Logo({ size = 44, showText = true, dark = false }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="logo-bg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#0A5BFF" />
-              <stop offset="100%" stopColor="#2563EB" />
-            </linearGradient>
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#2563EB" floodOpacity="0.35" />
-            </filter>
-          </defs>
-          {/* Main rounded square */}
-          <rect x="2" y="4" width="40" height="40" rx="12" fill="url(#logo-bg)" filter="url(#glow)" />
-          {/* Second card behind for depth */}
-          <rect x="8" y="2" width="40" height="40" rx="12" fill="#7C3AED" opacity="0.18" />
-          {/* People group */}
-          <circle cx="15.5" cy="22" r="4.5" fill="white" opacity="0.95" />
-          <path d="M7 34.5C7 30.5 9.8 27.2 14 27.2H17C21.2 27.2 24 30.5 24 34.5V36H7V34.5Z" fill="white" opacity="0.95" />
-          <circle cx="33.5" cy="22" r="4.5" fill="white" opacity="0.95" />
-          <path d="M25 34.5C25 30.5 27.8 27.2 32 27.2H35C39.2 27.2 42 30.5 42 34.5V36H25V34.5Z" fill="white" opacity="0.95" />
-          <circle cx="24" cy="18" r="6" fill="white" />
-          <path d="M14 39.5C14 33.5 17.5 28.5 24 28.5C30.5 28.5 34 33.5 34 39.5V41H14V39.5Z" fill="white" />
-          {/* Top badge */}
-          <circle cx="38" cy="10" r="10" fill="white" />
-          <rect x="29" y="12" width="4.5" height="6" rx="2" fill="#2563EB" />
-          <rect x="35" y="8" width="4.5" height="10" rx="2" fill="#2563EB" />
-          <rect x="41" y="5" width="4.5" height="13" rx="2" fill="#2563EB" />
-        </svg>
-      </div>
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+        {/* S - light blue */}
+        <path
+          d="M 18 24 C 18 12 28 4 42 4 L 68 4 C 73 4 76 7 76 12 C 76 17 73 20 68 20 L 42 20 C 34 20 28 24 28 32 C 28 40 34 44 42 44 L 60 44 C 65 44 68 47 68 52 C 68 57 65 60 60 60 L 42 60 C 28 60 12 52 12 34 C 12 16 26 4 42 4"
+          fill="#0A5BFF"
+          stroke="#0A5BFF"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        {/* H + lower S - dark navy, intertwined */}
+        <path
+          d="M 30 46 C 30 38 36 34 44 34 L 52 34 C 62 34 72 40 72 58 C 72 76 62 84 44 84 L 22 84 C 16 84 13 81 13 76 C 13 71 16 68 22 68 L 44 68 C 52 68 58 64 58 56 C 58 48 52 44 44 44 L 36 44 C 32 44 30 42 30 38 Z"
+          fill="#0A1E4A"
+        />
+        <rect x="69" y="20" width="18" height="68" rx="9" fill="#0A1E4A" />
+        <rect x="45" y="48" width="28" height="12" rx="4" fill="#0A1E4A" />
+      </svg>
       {showText && (
-        <div className="leading-tight">
-          <div className={`font-extrabold tracking-tight text-${textSize} flex`}>
+        <div className="leading-none">
+          <div className="font-extrabold tracking-tight text-[26px] flex">
             <span className="text-[#0A5BFF]">Social</span>
-            <span className="text-gray-900">Hub</span>
+            <span className={dark ? 'text-white' : 'text-[#0A1E4A]'}>Hub</span>
           </div>
-          <div className="text-[11px] tracking-widest text-gray-400 font-medium -mt-1">Manage. Connect. Grow.</div>
+          <div className={`text-[11px] tracking-widest font-medium -mt-0.5 ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Manage. Connect. Grow.</div>
         </div>
       )}
     </div>

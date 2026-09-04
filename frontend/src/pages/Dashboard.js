@@ -45,7 +45,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A5BFF]"></div>
       </div>
     );
   }
@@ -93,8 +93,8 @@ export default function Dashboard() {
     <div>
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">SocialHub</h1>
-          <p className="text-sm text-gray-500">Manage. Connect. Grow.</p>
+          <h1 className="text-3xl font-[460] text-[#292827]">SocialHub</h1>
+          <p className="text-sm text-[#666666]">Manage. Connect. Grow.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/posts" className="bg-[#0A5BFF] text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition text-sm">
