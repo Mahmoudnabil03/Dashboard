@@ -1,0 +1,42 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Bot, Check, Inbox as InboxIcon, MessageCircle, RefreshCw, Search } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../api';
+
+export default function Inbox() {
+  const [items, setItems] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchInbox = async () => {
+    setLoading(true);
+    try { const response = await api.get('/social/inbox'); setItems(response.data || []); }
+    catch { toast.error('Failed to load unified inbox'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchInbox(); }, []);
+
+  const filtered = useMemo(() => items.filter((item) => {
+    const matchesFilter = filter === 'all' || (filter === 'open' ? !item.replied : !!item.replied);
+    const text = `${item.author || ''} ${item.content || ''} ${item.platform || ''}`.toLowerCase();
+    return matchesFilter && text.includes(query.toLowerCase());
+  }), [items, filter, query]);
+
+  return (
+    <div>
+      <div className="flex flex-wrap justify-between items-start gap-4 mb-8"><div><h1 className="text-3xl font-[460] text-gray-800">Unified Inbox</h1><p className="text-gray-500 mt-1">Manage comments and conversations from every connected channel.</p></div><button onClick={fetchInbox} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center text-sm"><RefreshCw size={16} className="mr-2" />Refresh</button></div>
+      <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-6 flex flex-wrap gap-3 items-center"><div className="relative flex-1 min-w-[220px]"><Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search people, comments, platforms" className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" /></div><div className="flex gap-2">{[['all', 'All'], ['open', 'Needs reply'], ['replied', 'Replied']].map(([value, label]) => <button key={value} onClick={() => setFilter(value)} className={`px-3 py-2 rounded-lg text-sm ${filter === value ? 'bg-[#d4c7ff] text-[#421d24]' : 'text-gray-600 hover:bg-gray-50'}`}>{label}</button>)}</div></div>
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">{loading ? <div className="py-16 text-center text-gray-500">Loading inbox...</div> : filtered.length === 0 ? <div className="py-16 text-center text-gray-500"><InboxIcon size={42} className="mx-auto mb-3 text-gray-300" /><p>No conversations match this view.</p></div> : <div className="divide-y divide-gray-100">{filtered.map((item) => <InboxItem key={item.id} item={item} onUpdated={fetchInbox} />)}</div>}</div>
+    </div>
+  );
+}
+
+function InboxItem({ item, onUpdated }) {
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const generate = async () => { try { const response = await api.post('/ai/reply-comment', { comment: item.content, context: item.post_content || 'Social media conversation' }); setReply(response.data.reply || ''); } catch (error) { toast.error(error.response?.data?.error || 'AI reply unavailable'); } };
+  const send = async () => { if (!reply.trim()) return; setSending(true); try { await api.post('/social/comments/reply', { commentId: item.id, reply }); toast.success('Reply sent'); setReply(''); onUpdated(); } catch (error) { toast.error(error.response?.data?.error || 'Failed to send reply'); } finally { setSending(false); } };
+  return <div className={`p-5 ${item.replied ? 'bg-gray-50/50' : ''}`}><div className="flex gap-4"><div className="w-10 h-10 rounded-full bg-[#d4c7ff] text-[#421d24] flex items-center justify-center font-semibold shrink-0">{(item.author || '?').slice(0, 1).toUpperCase()}</div><div className="flex-1 min-w-0"><div className="flex flex-wrap justify-between gap-2"><div><span className="font-semibold text-gray-800">{item.author || 'Anonymous'}</span><span className="ml-2 text-xs text-[#714cb6] capitalize">{item.platform || 'social'}</span></div><span className="text-xs text-gray-400">{item.created_at ? new Date(item.created_at).toLocaleString() : ''}</span></div><p className="text-gray-700 mt-2">{item.content}</p>{item.post_content && <p className="text-xs text-gray-400 mt-1 truncate">On: {item.post_content}</p>}<div className="flex flex-wrap items-center gap-2 mt-4">{item.replied ? <span className="text-xs text-emerald-700 flex items-center"><Check size={14} className="mr-1" /> Replied</span> : <><button onClick={generate} className="px-3 py-1.5 rounded-lg bg-[#d4c7ff] text-[#421d24] text-sm flex items-center"><Bot size={15} className="mr-1.5" />Draft with AI</button><span className="text-xs text-gray-400 flex items-center"><MessageCircle size={14} className="mr-1" />Needs reply</span></>}</div>{!item.replied && reply && <div className="mt-3 flex gap-2"><input value={reply} onChange={(event) => setReply(event.target.value)} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" /><button onClick={send} disabled={sending} className="px-4 py-2 rounded-lg bg-[#421d24] text-white text-sm disabled:opacity-50">{sending ? 'Sending...' : 'Send'}</button></div>}</div></div></div>;
+}

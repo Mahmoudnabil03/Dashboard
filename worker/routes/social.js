@@ -42,6 +42,23 @@ social.get('/accounts', authMiddleware, async (c) => {
   return c.json(results.map(parseAccount));
 });
 
+// UNIFIED INBOX: comments joined with their post and connected account.
+// This is intentionally read-only; sending replies continues through the
+// existing /comments/reply endpoint.
+social.get('/inbox', authMiddleware, async (c) => {
+  const userId = c.get('userId');
+  const { results } = await c.env.DB.prepare(
+    `SELECT c.*, p.content AS post_content, p.platform, p.account_id,
+            s.username AS account_username
+     FROM dashboard_comments c
+     LEFT JOIN dashboard_posts p ON c.post_id = p.id
+     LEFT JOIN dashboard_social_accounts s ON p.account_id = s.id
+     WHERE c.user_id = ?
+     ORDER BY c.replied ASC, c.created_at DESC`
+  ).bind(userId).all();
+  return c.json(results);
+});
+
 // DISCONNECT
 social.delete('/accounts/:id', authMiddleware, async (c) => {
   const userId = c.get('userId');

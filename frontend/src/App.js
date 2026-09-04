@@ -9,6 +9,8 @@ import Calendar from './pages/Calendar';
 import Comments from './pages/Comments';
 import Accounts from './pages/Accounts';
 import AIAgent from './pages/AIAgent';
+import Analytics from './pages/Analytics';
+import Inbox from './pages/Inbox';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient();
@@ -72,6 +74,8 @@ function App() {
                 <Route path="posts" element={<Posts />} />
                 <Route path="calendar" element={<Calendar />} />
                 <Route path="comments" element={<Comments />} />
+                <Route path="inbox" element={<Inbox />} />
+                <Route path="analytics" element={<Analytics />} />
                 <Route path="ai-agent" element={<AIAgent />} />
                 <Route path="accounts" element={<Accounts />} />
               </Route>

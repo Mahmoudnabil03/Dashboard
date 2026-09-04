@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import Logo from './Logo';
 import {
-  LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut,
+  LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut, BarChart3, Inbox,
 } from 'lucide-react';
 
 const navItems = [
@@ -11,6 +11,8 @@ const navItems = [
   { to: '/posts', label: 'Posts', icon: Send },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/comments', label: 'Comments', icon: MessageSquare },
+  { to: '/inbox', label: 'Unified Inbox', icon: Inbox },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/ai-agent', label: 'AI Agent', icon: Bot },
   { to: '/accounts', label: 'Accounts', icon: Link2 },
 ];
