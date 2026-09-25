@@ -11,6 +11,7 @@ import Accounts from './pages/Accounts';
 import AIAgent from './pages/AIAgent';
 import Analytics from './pages/Analytics';
 import Inbox from './pages/Inbox';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ function App() {
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="ai-agent" element={<AIAgent />} />
                 <Route path="accounts" element={<Accounts />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
             </Route>
           </Routes>

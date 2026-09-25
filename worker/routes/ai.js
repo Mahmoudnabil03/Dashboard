@@ -4,6 +4,16 @@ import { authMiddleware, openaiChat, parseAgent, parseProperty, body } from '../
 const ai = new Hono();
 ai.use('*', authMiddleware);
 
+async function getWorkspaceId(c, userId) {
+  const workspace = await c.env.DB.prepare(
+    `SELECT w.id FROM dashboard_workspaces w
+     JOIN dashboard_workspace_members wm ON w.id = wm.workspace_id
+     WHERE wm.user_id = ?
+     LIMIT 1`
+  ).bind(userId).first();
+  return workspace?.id;
+}
+
 // ---- helpers ----
 function formatPrice(price) {
   const n = Number(price);
@@ -53,9 +63,12 @@ function buildTemplatePost(property, platform) {
 ai.post('/agents', async (c) => {
   const { name, description, config } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const row = await c.env.DB
-    .prepare('INSERT INTO dashboard_ai_agents (user_id, name, description, config) VALUES (?, ?, ?, ?) RETURNING *')
-    .bind(userId, name || null, description || null, JSON.stringify(config || {}))
+    .prepare('INSERT INTO dashboard_ai_agents (workspace_id, name, description, config) VALUES (?, ?, ?, ?) RETURNING *')
+    .bind(workspaceId, name || null, description || null, JSON.stringify(config || {}))
     .first();
   return c.json(parseAgent(row), 201);
 });
@@ -63,9 +76,12 @@ ai.post('/agents', async (c) => {
 // LIST AGENTS
 ai.get('/agents', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json([]);
+  
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ? ORDER BY created_at DESC')
-    .bind(userId)
+    .prepare('SELECT * FROM dashboard_ai_agents WHERE workspace_id = ? ORDER BY created_at DESC')
+    .bind(workspaceId)
     .all();
   return c.json(results.map(parseAgent));
 });
@@ -73,28 +89,37 @@ ai.get('/agents', async (c) => {
 // TOGGLE SINGLE AGENT ON/OFF
 ai.patch('/agents/:id/toggle', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const id = c.req.param('id');
-  const row = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE id = ? AND user_id = ?').bind(id, userId).first();
+  const row = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE id = ? AND workspace_id = ?').bind(id, workspaceId).first();
   if (!row) return c.json({ error: 'Agent not found' }, 404);
   const next = row.is_active ? 0 : 1;
-  const updated = await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE id = ? AND user_id = ? RETURNING *').bind(next, id, userId).first();
+  const updated = await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE id = ? AND workspace_id = ? RETURNING *').bind(next, id, workspaceId).first();
   return c.json(parseAgent(updated));
 });
 
 // TOGGLE ALL AGENTS ON/OFF (master switch)
 ai.post('/agents/toggle-all', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const { is_active } = await body(c);
   const val = is_active ? 1 : 0;
-  await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE user_id = ?').bind(val, userId).run();
-  const { results } = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE user_id = ?').bind(userId).all();
+  await c.env.DB.prepare('UPDATE dashboard_ai_agents SET is_active = ? WHERE workspace_id = ?').bind(val, workspaceId).run();
+  const { results } = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE workspace_id = ?').bind(workspaceId).all();
   return c.json(results.map(parseAgent));
 });
 
 // DELETE AGENT
 ai.delete('/agents/:id', async (c) => {
   const userId = c.get('userId');
-  const row = await c.env.DB.prepare('DELETE FROM dashboard_ai_agents WHERE id = ? AND user_id = ? RETURNING id').bind(c.req.param('id'), userId).first();
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const row = await c.env.DB.prepare('DELETE FROM dashboard_ai_agents WHERE id = ? AND workspace_id = ? RETURNING id').bind(c.req.param('id'), workspaceId).first();
   if (!row) return c.json({ error: 'Agent not found' }, 404);
   return c.json({ message: 'Agent deleted' });
 });
@@ -117,12 +142,15 @@ ai.post('/generate-content', async (c) => {
 ai.post('/reply-comment', async (c) => {
   const { comment, context, agentId } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   // If any agent check: if agentId provided, ensure it's active; else need at least one active agent
   if (agentId) {
-    const ag = await c.env.DB.prepare('SELECT is_active FROM dashboard_ai_agents WHERE id = ? AND user_id = ?').bind(agentId, userId).first();
+    const ag = await c.env.DB.prepare('SELECT is_active FROM dashboard_ai_agents WHERE id = ? AND workspace_id = ?').bind(agentId, workspaceId).first();
     if (ag && !ag.is_active) return c.json({ error: 'AI agent is OFF. Turn it on to auto-reply.' }, 403);
   } else {
-    const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE user_id = ? AND is_active = 1 LIMIT 1').bind(userId).first();
+    const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE workspace_id = ? AND is_active = 1 LIMIT 1').bind(workspaceId).first();
     if (!any) return c.json({ error: 'No active AI agent. Turn ON the AI agent to reply.' }, 403);
   }
   try {
@@ -148,7 +176,10 @@ ai.post('/reply-comment', async (c) => {
 ai.post('/auto-reply', async (c) => {
   const { commentId, comment, context } = await body(c);
   const userId = c.get('userId');
-  const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE user_id = ? AND is_active = 1 LIMIT 1').bind(userId).first();
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const any = await c.env.DB.prepare('SELECT id FROM dashboard_ai_agents WHERE workspace_id = ? AND is_active = 1 LIMIT 1').bind(workspaceId).first();
   if (!any) return c.json({ error: 'AI agent is OFF' }, 403);
   try {
     const reply = await openaiChat(c.env, [
@@ -179,10 +210,12 @@ ai.post('/suggestions', async (c) => {
 ai.post('/generate-listing-post', async (c) => {
   const { propertyId, platform = 'instagram', tone = 'professional' } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
 
   const raw = await c.env.DB
-    .prepare('SELECT * FROM dashboard_properties WHERE id = ? AND user_id = ?')
-    .bind(propertyId, userId)
+    .prepare('SELECT * FROM dashboard_properties WHERE id = ? AND workspace_id = ?')
+    .bind(propertyId, workspaceId)
     .first();
   if (!raw) return c.json({ error: 'Property not found' }, 404);
 

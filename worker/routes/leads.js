@@ -4,21 +4,34 @@ import { authMiddleware, body } from '../lib.js';
 const leads = new Hono();
 leads.use('*', authMiddleware);
 
+async function getWorkspaceId(c, userId) {
+  const workspace = await c.env.DB.prepare(
+    `SELECT w.id FROM dashboard_workspaces w
+     JOIN dashboard_workspace_members wm ON w.id = wm.workspace_id
+     WHERE wm.user_id = ?
+     LIMIT 1`
+  ).bind(userId).first();
+  return workspace?.id;
+}
+
 const VALID_STATUSES = ['new', 'contacted', 'qualified', 'closed', 'lost'];
 
 // CREATE (manual)
 leads.post('/', async (c) => {
   const b = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const status = VALID_STATUSES.includes(b.status) ? b.status : 'new';
 
   const row = await c.env.DB.prepare(
     `INSERT INTO dashboard_leads
-      (user_id, property_id, name, email, phone, source, platform, message, status, notes)
+      (workspace_id, property_id, name, email, phone, source, platform, message, status, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING *`
   ).bind(
-    userId,
+    workspaceId,
     b.property_id || null,
     b.name || null,
     b.email || null,
@@ -37,19 +50,21 @@ leads.post('/', async (c) => {
 leads.post('/from-comment', async (c) => {
   const { comment_id, property_id, name } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
 
   const comment = await c.env.DB.prepare(
     `SELECT c.*, p.platform AS post_platform
      FROM dashboard_comments c
      LEFT JOIN dashboard_posts p ON c.post_id = p.id
-     WHERE c.id = ? AND c.user_id = ?`
-  ).bind(comment_id, userId).first();
+     WHERE c.id = ? AND c.workspace_id = ?`
+  ).bind(comment_id, workspaceId).first();
 
   if (!comment) return c.json({ error: 'Comment not found' }, 404);
 
   const existing = await c.env.DB
-    .prepare('SELECT id FROM dashboard_leads WHERE comment_id = ? AND user_id = ?')
-    .bind(comment_id, userId)
+    .prepare('SELECT id FROM dashboard_leads WHERE comment_id = ? AND workspace_id = ?')
+    .bind(comment_id, workspaceId)
     .first();
   if (existing) {
     return c.json({ error: 'A lead already exists for this comment', leadId: existing.id }, 409);
@@ -57,11 +72,11 @@ leads.post('/from-comment', async (c) => {
 
   const row = await c.env.DB.prepare(
     `INSERT INTO dashboard_leads
-      (user_id, property_id, comment_id, name, source, platform, message, status)
+      (workspace_id, property_id, comment_id, name, source, platform, message, status)
      VALUES (?, ?, ?, ?, 'comment', ?, ?, 'new')
      RETURNING *`
   ).bind(
-    userId,
+    workspaceId,
     property_id || null,
     comment_id,
     name || comment.author || 'Unknown',
@@ -75,14 +90,17 @@ leads.post('/from-comment', async (c) => {
 // LIST (optional ?status= filter) with property info joined
 leads.get('/', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json([]);
+  
   const status = c.req.query('status');
 
   let sql = `
     SELECT l.*, p.title AS property_title, p.address AS property_address
     FROM dashboard_leads l
     LEFT JOIN dashboard_properties p ON l.property_id = p.id
-    WHERE l.user_id = ?`;
-  const params = [userId];
+    WHERE l.workspace_id = ?`;
+  const params = [workspaceId];
   if (status) {
     sql += ' AND l.status = ?';
     params.push(status);
@@ -96,6 +114,9 @@ leads.get('/', async (c) => {
 // SUMMARY STATS
 leads.get('/stats/summary', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ total: 0, new: 0, contacted: 0, qualified: 0, closed: 0 });
+  
   const row = await c.env.DB.prepare(
     `SELECT
        COUNT(*) AS total,
@@ -103,8 +124,8 @@ leads.get('/stats/summary', async (c) => {
        SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END) AS contacted,
        SUM(CASE WHEN status = 'qualified' THEN 1 ELSE 0 END) AS qualified,
        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) AS closed
-     FROM dashboard_leads WHERE user_id = ?`
-  ).bind(userId).first();
+     FROM dashboard_leads WHERE workspace_id = ?`
+  ).bind(workspaceId).first();
 
   return c.json({
     total: row.total || 0,
@@ -119,13 +140,16 @@ leads.get('/stats/summary', async (c) => {
 leads.put('/:id', async (c) => {
   const b = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const status = VALID_STATUSES.includes(b.status) ? b.status : 'new';
 
   const row = await c.env.DB.prepare(
     `UPDATE dashboard_leads SET
        name = ?, email = ?, phone = ?, platform = ?, message = ?,
        property_id = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ? AND user_id = ?
+     WHERE id = ? AND workspace_id = ?
      RETURNING *`
   ).bind(
     b.name || null,
@@ -137,7 +161,7 @@ leads.put('/:id', async (c) => {
     status,
     b.notes || null,
     c.req.param('id'),
-    userId
+    workspaceId
   ).first();
 
   if (!row) return c.json({ error: 'Lead not found' }, 404);
@@ -148,13 +172,16 @@ leads.put('/:id', async (c) => {
 leads.patch('/:id/status', async (c) => {
   const { status } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   if (!VALID_STATUSES.includes(status)) {
     return c.json({ error: 'Invalid status' }, 400);
   }
 
   const row = await c.env.DB
-    .prepare('UPDATE dashboard_leads SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? RETURNING *')
-    .bind(status, c.req.param('id'), userId)
+    .prepare('UPDATE dashboard_leads SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND workspace_id = ? RETURNING *')
+    .bind(status, c.req.param('id'), workspaceId)
     .first();
 
   if (!row) return c.json({ error: 'Lead not found' }, 404);
@@ -164,9 +191,12 @@ leads.patch('/:id/status', async (c) => {
 // DELETE
 leads.delete('/:id', async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const row = await c.env.DB
-    .prepare('DELETE FROM dashboard_leads WHERE id = ? AND user_id = ? RETURNING id')
-    .bind(c.req.param('id'), userId)
+    .prepare('DELETE FROM dashboard_leads WHERE id = ? AND workspace_id = ? RETURNING id')
+    .bind(c.req.param('id'), workspaceId)
     .first();
   if (!row) return c.json({ error: 'Lead not found' }, 404);
   return c.json({ message: 'Lead deleted successfully' });

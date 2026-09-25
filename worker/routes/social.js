@@ -17,17 +17,27 @@ function configured(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-async function upsertAccount(c, userId, platform, username, accessToken, refreshToken, data) {
+async function getWorkspaceId(c, userId) {
+  const workspace = await c.env.DB.prepare(
+    `SELECT w.id FROM dashboard_workspaces w
+     JOIN dashboard_workspace_members wm ON w.id = wm.workspace_id
+     WHERE wm.user_id = ?
+     LIMIT 1`
+  ).bind(userId).first();
+  return workspace?.id;
+}
+
+async function upsertAccount(c, workspaceId, platform, username, accessToken, refreshToken, data) {
   await c.env.DB.prepare(
-    `INSERT INTO dashboard_social_accounts (user_id, platform, username, access_token, refresh_token, account_data)
+    `INSERT INTO dashboard_social_accounts (workspace_id, platform, username, access_token, refresh_token, account_data)
      VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(user_id, platform) DO UPDATE SET
+     ON CONFLICT(workspace_id, platform) DO UPDATE SET
        username = excluded.username,
        access_token = excluded.access_token,
        refresh_token = excluded.refresh_token,
        account_data = excluded.account_data,
        updated_at = CURRENT_TIMESTAMP`
-  ).bind(userId, platform, username || null, accessToken || null, refreshToken || null, JSON.stringify(data || {})).run();
+  ).bind(workspaceId, platform, username || null, accessToken || null, refreshToken || null, JSON.stringify(data || {})).run();
 }
 
 // ============================================
@@ -35,9 +45,12 @@ async function upsertAccount(c, userId, platform, username, accessToken, refresh
 // ============================================
 social.get('/accounts', authMiddleware, async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json([]);
+  
   const { results } = await c.env.DB
-    .prepare('SELECT * FROM dashboard_social_accounts WHERE user_id = ? ORDER BY platform, created_at DESC')
-    .bind(userId)
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE workspace_id = ? ORDER BY platform, created_at DESC')
+    .bind(workspaceId)
     .all();
   return c.json(results.map(parseAccount));
 });
@@ -47,24 +60,30 @@ social.get('/accounts', authMiddleware, async (c) => {
 // existing /comments/reply endpoint.
 social.get('/inbox', authMiddleware, async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json([]);
+  
   const { results } = await c.env.DB.prepare(
     `SELECT c.*, p.content AS post_content, p.platform, p.account_id,
             s.username AS account_username
      FROM dashboard_comments c
      LEFT JOIN dashboard_posts p ON c.post_id = p.id
      LEFT JOIN dashboard_social_accounts s ON p.account_id = s.id
-     WHERE c.user_id = ?
+     WHERE c.workspace_id = ?
      ORDER BY c.replied ASC, c.created_at DESC`
-  ).bind(userId).all();
+  ).bind(workspaceId).all();
   return c.json(results);
 });
 
 // DISCONNECT
 social.delete('/accounts/:id', authMiddleware, async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const row = await c.env.DB
-    .prepare('DELETE FROM dashboard_social_accounts WHERE id = ? AND user_id = ? RETURNING id')
-    .bind(c.req.param('id'), userId)
+    .prepare('DELETE FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ? RETURNING id')
+    .bind(c.req.param('id'), workspaceId)
     .first();
   if (!row) return c.json({ error: 'Account not found' }, 404);
   return c.json({ message: 'Account disconnected successfully' });
@@ -75,13 +94,16 @@ social.delete('/accounts/:id', authMiddleware, async (c) => {
 // ============================================
 social.get('/comments/:postId', authMiddleware, async (c) => {
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json([]);
+  
   const { results } = await c.env.DB.prepare(
     `SELECT c.*, p.content AS post_content
      FROM dashboard_comments c
      LEFT JOIN dashboard_posts p ON c.post_id = p.id
-     WHERE c.post_id = ? AND c.user_id = ?
+     WHERE c.post_id = ? AND c.workspace_id = ?
      ORDER BY c.created_at DESC`
-  ).bind(c.req.param('postId'), userId).all();
+  ).bind(c.req.param('postId'), workspaceId).all();
   return c.json(results);
 });
 
@@ -89,14 +111,16 @@ social.get('/comments/:postId', authMiddleware, async (c) => {
 social.post('/comments/reply', authMiddleware, async (c) => {
   const { commentId, reply } = await body(c);
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
 
   const comment = await c.env.DB.prepare(
     `SELECT c.*, s.access_token, s.platform, s.account_data
      FROM dashboard_comments c
      JOIN dashboard_posts p ON c.post_id = p.id
      JOIN dashboard_social_accounts s ON p.account_id = s.id
-     WHERE c.id = ? AND c.user_id = ?`
-  ).bind(commentId, userId).first();
+     WHERE c.id = ? AND c.workspace_id = ?`
+  ).bind(commentId, workspaceId).first();
 
   if (!comment) return c.json({ error: 'Comment not found' }, 404);
 
@@ -107,8 +131,8 @@ social.post('/comments/reply', authMiddleware, async (c) => {
   }
 
   await c.env.DB
-    .prepare('UPDATE dashboard_comments SET replied = 1, ai_response = ? WHERE id = ? AND user_id = ?')
-    .bind(reply, commentId, userId)
+    .prepare('UPDATE dashboard_comments SET replied = 1, ai_response = ? WHERE id = ? AND workspace_id = ?')
+    .bind(reply, commentId, workspaceId)
     .run();
 
   return c.json({ message: 'Reply sent successfully' });
@@ -169,9 +193,12 @@ async function fetchJSON(url, options) {
 // ============================================
 // OAUTH: INITIATE (returns an authorize URL for the popup)
 // ============================================
-social.get('/:platform/auth', authMiddleware, (c) => {
+social.get('/:platform/auth', authMiddleware, async (c) => {
   const platform = c.req.param('platform');
   const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
   const redirectUri = callbackUrl(c, platform);
   let url;
 
@@ -182,7 +209,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         client_id: c.env.TWITTER_CLIENT_ID || '',
         redirect_uri: redirectUri,
         scope: 'tweet.read tweet.write users.read offline.access',
-        state: String(userId),
+        state: String(workspaceId),
         code_challenge: 'challenge',
         code_challenge_method: 'plain',
       });
@@ -193,7 +220,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         redirect_uri: redirectUri,
         scope: 'instagram_basic,instagram_manage_comments,instagram_manage_insights',
         response_type: 'code',
-        state: String(userId),
+        state: String(workspaceId),
       });
       break;
     case 'facebook':
@@ -202,7 +229,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         redirect_uri: redirectUri,
         scope: 'pages_manage_posts,pages_read_engagement,pages_manage_engagement',
         response_type: 'code',
-        state: String(userId),
+        state: String(workspaceId),
       });
       break;
     case 'linkedin':
@@ -211,7 +238,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         client_id: c.env.LINKEDIN_CLIENT_ID || '',
         redirect_uri: redirectUri,
         scope: 'profile w_member_social email openid',
-        state: String(userId),
+        state: String(workspaceId),
       });
       break;
     case 'tiktok':
@@ -220,7 +247,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         response_type: 'code',
         scope: 'user.info.basic,video.publish,video.upload',
         redirect_uri: redirectUri,
-        state: String(userId),
+        state: String(workspaceId),
       });
       break;
     case 'whatsapp':
@@ -230,7 +257,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
         redirect_uri: redirectUri,
         scope: 'whatsapp_business_messaging,whatsapp_business_management,public_profile',
         response_type: 'code',
-        state: String(userId),
+        state: String(workspaceId),
       });
       break;
     default:
@@ -262,7 +289,7 @@ social.get('/:platform/auth', authMiddleware, (c) => {
 social.get('/:platform/callback', async (c) => {
   const platform = c.req.param('platform');
   const code = c.req.query('code');
-  const state = c.req.query('state'); // userId
+  const state = c.req.query('state'); // workspaceId
   const redirectUri = callbackUrl(c, platform);
   const base = originOf(c);
 
