@@ -11,7 +11,7 @@ committed, and deployed. Live: https://dashboard.mahmoudnabil03.workers.dev/
 
 ## P1 - High
 - [x] Rate limiting on auth endpoints (D1 sliding window plus backoff messaging)
-- [ ] Unified inbox MVP hardening (exists: filters/search/reply; add assign plus status workflow)
+- [x] Unified inbox MVP hardening (assign plus open/pending/resolved plus moderation flags)
 - [x] Accessibility pass on auth screens (labels, aria, focus, contrast, keyboard)
 - [x] React Error Boundary around app plus friendly fallback
 - [x] Safer token storage: httpOnly Secure SameSite cookies plus short sessions (keep Bearer compat)
@@ -27,9 +27,9 @@ committed, and deployed. Live: https://dashboard.mahmoudnabil03.workers.dev/
 
 ## P3 - Lower
 - [x] Dark/light mode toggle (persist, respect prefers-color-scheme)
-- [ ] TypeScript migration plan (doc only; repo is JS)
+- [x] TypeScript migration plan (TYPESCRIPT.md)
 - [x] CI/CD: GitHub Actions (install, build, dry-run deploy)
-- [ ] Operational alerts: documented (Cloudflare dashboard config, needs UI setup)
+- [x] Operational alerts: documented in README Operations
 - [x] Configuration as code: wrangler.jsonc is source of truth
 
 ## Blockers / external credentials needed
