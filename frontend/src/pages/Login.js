@@ -102,7 +102,7 @@ export default function Login() {
         <div className="flex justify-center mb-6">
           <Logo size={58} />
         </div>
-        <h1 className="text-center text-xl font-bold text-[var(--text-primary)]">
+        <h1 className="text-center text-[42px] leading-[1.2] font-normal tracking-[-1.68px] text-[var(--text-primary)]">
           {isLogin ? "Welcome back to SocialHub" : "Create your SocialHub account"}
         </h1>
         <p className="text-center text-[var(--text-tertiary)] text-sm mt-1 mb-6">Manage. Connect. Grow.</p>
@@ -156,7 +156,7 @@ export default function Login() {
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full bg-[var(--brand-primary)] text-white py-2.5 rounded-xl hover:bg-[var(--brand-primary-hover)] transition flex items-center justify-center disabled:opacity-50 font-medium" aria-busy={loading}>
+            className="w-full bg-[var(--brand-primary)] text-white py-3 rounded-[24px] hover:bg-[var(--brand-primary-hover)] transition flex items-center justify-center disabled:opacity-50 font-semibold uppercase tracking-[0.025em] text-sm" aria-busy={loading}>
             {loading ? <Loader2 size={20} className="mr-2 animate-spin" /> : <LogIn size={20} className="mr-2" aria-hidden="true" />}
             {loading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}
           </button>
