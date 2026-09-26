@@ -90,6 +90,13 @@ app.onError((err, c) => {
 
 // Everything else: serve static assets, with SPA fallback to index.html
 // (configured via assets.not_found_handling in wrangler.jsonc).
-app.all("*", (c) => c.env.ASSETS.fetch(c.req.raw));
+// Security headers are applied explicitly here because the ASSETS
+// passthrough response is not mutable via context headers.
+app.all("*", async (c) => {
+  const res = await c.env.ASSETS.fetch(c.req.raw);
+  const out = new Response(res.body, res);
+  for (const k of Object.keys(SEC_HEADERS)) out.headers.set(k, SEC_HEADERS[k]);
+  return out;
+});
 
 export default app;
