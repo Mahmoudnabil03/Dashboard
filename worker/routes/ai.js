@@ -305,9 +305,11 @@ ai.post("/moderate", async (c) => {
   if (c.env.AI) {
     try {
       const out = await c.env.AI.run("@cf/huggingface/distilbert-sst-2-int8", { text: t.slice(0, 2000) });
-      const top = Array.isArray(out) ? out[0] : out;
-      if (top && top.label) {
-        sentiment = /pos/i.test(top.label) ? "positive" : "negative";
+      const list = Array.isArray(out) ? out : (out && Array.isArray(out.result) ? out.result : []);
+      const top = list.reduce((a, b) => (typeof b.score === "number" && (!a || b.score > (a.score || 0)) ? b : a), null);
+      if (top && typeof top.label === "string") {
+        const lab = top.label.toUpperCase();
+        sentiment = (lab.indexOf("POS") !== -1 || lab === "LABEL_1") ? "positive" : "negative";
         score = typeof top.score === "number" ? Math.round(top.score * 100) / 100 : null;
       }
     } catch (err) {
