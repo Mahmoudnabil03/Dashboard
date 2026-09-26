@@ -86,7 +86,7 @@ export default function Websites() {
         </div>
       )}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false) } } }>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[300] p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false) } } }>
           <div className="card p-6 max-w-md w-full animate-scale-in">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[var(--text-primary)]">{editingId ? "Edit Website" : "Add Website"}</h2>

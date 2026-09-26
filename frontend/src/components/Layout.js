@@ -60,7 +60,7 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-[201] w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
+        className={`fixed lg:static inset-y-0 left-0 z-[200] lg:z-auto w-64 bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
         aria-label="Main navigation"

@@ -277,7 +277,7 @@ export default function Properties() {
 
       {/* Add / Edit Property Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false) } } }>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[300] p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowModal(false) } } }>
           <div className="bg-[var(--bg-card)] rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-[var(--text-primary)]">{editingId ? 'Edit Property' : 'Add Property'}</h2>
@@ -410,7 +410,7 @@ export default function Properties() {
 
       {/* Listing-to-Post Generator Modal */}
       {genProperty && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setGenProperty(null) } } }>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[300] p-4" onClick={(e) => { if (e.target === e.currentTarget) { setGenProperty(null) } } }>
           <div className="bg-[var(--bg-card)] rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center">

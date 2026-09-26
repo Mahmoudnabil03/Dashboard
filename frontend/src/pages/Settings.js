@@ -524,7 +524,7 @@ function IntegrationsTab({
 
       {/* Edit/Add Form Modal */}
       {editingIntegration !== undefined && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setEditingIntegration(null); setIntegrationForm({}); } } }>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[300] p-4" onClick={(e) => { if (e.target === e.currentTarget) { setEditingIntegration(null); setIntegrationForm({}); } } }>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[var(--text-primary)]">
