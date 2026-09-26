@@ -392,4 +392,38 @@ social.get('/:platform/callback', async (c) => {
   }
 });
 
+// FACEBOOK DEAUTHORIZE CALLBACK
+// Called when user removes app from Facebook settings
+social.post('/facebook/deauthorize', async (c) => {
+  const body = await c.req.text();
+  const signedRequest = new URLSearchParams(body).get('signed_request');
+  
+  if (!signedRequest) return c.json({ error: 'No signed_request' }, 400);
+  
+  try {
+    const [signature, payload] = signedRequest.split('.');
+    const data = JSON.parse(
+      Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
+    );
+    
+    const userId = data.user_id;
+    if (!userId) return c.json({ error: 'No user_id in payload' }, 400);
+    
+    // Delete user's Facebook/Instagram tokens
+    await c.env.DB.prepare(
+      `DELETE FROM dashboard_social_accounts 
+       WHERE workspace_id IN (
+         SELECT w.id FROM dashboard_workspaces w
+         JOIN dashboard_workspace_members wm ON w.id = wm.workspace_id
+         WHERE wm.user_id = ?
+       ) AND platform IN ('facebook', 'instagram', 'whatsapp')`
+    ).bind(userId).run();
+    
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Deauthorize error:', err);
+    return c.json({ error: 'Invalid signed_request' }, 400);
+  }
+});
+
 export default social;
