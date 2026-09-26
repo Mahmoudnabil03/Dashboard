@@ -17,8 +17,10 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      # npm install (not ci): react-scripts 5 + tailwindcss 3.4 carry an invalid
+      # yaml dedupe that strict `npm ci` rejects on some npm versions.
       - name: Install frontend deps
-        run: npm ci
+        run: npm install
         working-directory: frontend
       - name: Build frontend
         run: npm run build
