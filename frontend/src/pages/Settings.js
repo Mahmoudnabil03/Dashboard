@@ -2,7 +2,7 @@
 import { 
   Building2, Palette, Link2, Bot, Bell, Users, CreditCard, 
   Save, Loader, AlertCircle, CheckCircle, Trash2, Eye, EyeOff,
-  Plus, TestTube, Globe, Wifi, Zap
+  Plus, TestTube, Globe, Wifi, Zap, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -524,7 +524,7 @@ function IntegrationsTab({
 
       {/* Edit/Add Form Modal */}
       {editingIntegration !== undefined && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setEditingIntegration(null); setIntegrationForm({}); } } }>
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[var(--text-primary)]">
@@ -534,9 +534,7 @@ function IntegrationsTab({
                 onClick={() => { setEditingIntegration(null); setIntegrationForm({}); }}
                 className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
-                <svg size={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
+                <X size={24} />
               </button>
             </div>
             

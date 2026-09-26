@@ -296,7 +296,7 @@ export default function AIAgent() {
 
       {/* Agent Modal */}
       {showAgentModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowAgentModal(false) } } }>
           <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[var(--text-primary)]">Create AI Agent</h2>
@@ -327,7 +327,7 @@ export default function AIAgent() {
 
       {/* Chat Modal */}
       {showChatModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) { setShowChatModal(false) } } }>
           <div className="card w-full max-w-2xl max-h-[90vh] h-[90vh] flex flex-col animate-scale-in">
             {/* Chat Header */}
             <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
