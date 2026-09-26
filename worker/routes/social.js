@@ -426,4 +426,110 @@ social.post('/facebook/deauthorize', async (c) => {
   }
 });
 
+// ============================================
+// FACEBOOK WEBHOOKS
+// ============================================
+
+// Verify webhook subscription (GET)
+social.get('/facebook/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const challenge = c.req.query('hub.challenge');
+  const verifyToken = c.req.query('hub.verify_token');
+  const expectedToken = c.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN;
+
+  if (mode === 'subscribe' && verifyToken === expectedToken) {
+    console.log('Facebook webhook verified');
+    return c.text(challenge);
+  }
+  
+  console.warn('Facebook webhook verification failed');
+  return c.text('Forbidden', 403);
+});
+
+// Receive real-time updates (POST)
+social.post('/facebook/webhook', async (c) => {
+  const body = await c.req.json();
+  const verifyToken = c.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN;
+
+  // Verify X-Hub-Signature-256 if needed
+  // const signature = c.req.header('X-Hub-Signature-256');
+  
+  try {
+    if (body.object === 'page') {
+      for (const entry of body.entry) {
+        const pageId = entry.id;
+        
+        // Find workspace with this page
+        const account = await c.env.DB.prepare(
+          `SELECT workspace_id, access_token, account_data FROM dashboard_social_accounts 
+           WHERE platform = 'facebook' AND JSON_EXTRACT(account_data, '$.id') = ?`
+        ).bind(pageId).first();
+
+        if (!account) {
+          console.log(`No workspace found for page ${pageId}`);
+          continue;
+        }
+
+        const accountData = JSON.parse(account.account_data || '{}');
+        
+        for (const change of entry.changes || []) {
+          if (change.field === 'feed') {
+            // New post/comment on page
+            await handlePageFeedChange(c, account.workspace_id, change.value, account.access_token);
+          } else if (change.field === 'messages') {
+            // New message
+            await handlePageMessage(c, account.workspace_id, change.value, account.access_token);
+          } else if (change.field === 'comments') {
+            // New comment
+            await handlePageComment(c, account.workspace_id, change.value, account.access_token);
+          }
+        }
+      }
+    }
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Webhook processing error:', err);
+    return c.json({ error: 'Processing failed' }, 500);
+  }
+});
+
+async function handlePageFeedChange(c, workspaceId, value, accessToken) {
+  // Store feed changes (new posts, etc.)
+  console.log('Page feed change:', value);
+}
+
+async function handlePageMessage(c, workspaceId, value, accessToken) {
+  // Store incoming messages
+  console.log('Page message:', value);
+}
+
+async function handlePageComment(c, workspaceId, value, accessToken) {
+  // Store new comments for inbox
+  console.log('Page comment:', value);
+  // Could auto-create comments in dashboard_comments table
+}
+
+// ============================================
+// INSTAGRAM WEBHOOKS
+// ============================================
+
+social.get('/instagram/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const challenge = c.req.query('hub.challenge');
+  const verifyToken = c.req.query('hub.verify_token');
+  const expectedToken = c.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+
+  if (mode === 'subscribe' && verifyToken === expectedToken) {
+    console.log('Instagram webhook verified');
+    return c.text(challenge);
+  }
+  return c.text('Forbidden', 403);
+});
+
+social.post('/instagram/webhook', async (c) => {
+  const body = await c.req.json();
+  console.log('Instagram webhook:', JSON.stringify(body));
+  return c.json({ success: true });
+});
+
 export default social;
