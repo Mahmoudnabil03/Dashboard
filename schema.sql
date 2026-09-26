@@ -1,4 +1,4 @@
--- SocialHub D1 (SQLite) schema
+﻿-- SocialHub D1 (SQLite) schema
 -- Apply with:
 --   npx wrangler d1 execute aqarx-db --remote --file=./schema.sql
 -- SQLite notes vs Postgres:
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS dashboard_users (
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
   name TEXT,
+  email_verified INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -334,3 +335,24 @@ CREATE INDEX IF NOT EXISTS idx_dashboard_campaigns_workspace ON dashboard_campai
 CREATE INDEX IF NOT EXISTS idx_dashboard_content_ideas_workspace ON dashboard_content_ideas(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_dashboard_notifications_workspace ON dashboard_notifications(workspace_id);
 CREATE INDEX IF NOT EXISTS idx_dashboard_audit_logs_workspace ON dashboard_audit_logs(workspace_id);
+
+-- Auth hardening (email verification, password reset, rate limiting)
+CREATE TABLE IF NOT EXISTS dashboard_email_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  email TEXT NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  purpose TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  used INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS dashboard_rate_events (
+  ip TEXT NOT NULL,
+  route TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_tokens_token ON dashboard_email_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_rate_events_ip_route ON dashboard_rate_events(ip, route, created_at);

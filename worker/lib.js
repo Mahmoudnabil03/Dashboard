@@ -102,8 +102,17 @@ export async function verifyPassword(password, stored) {
 // ============================================
 // Auth middleware (Hono)
 // ============================================
+export function sessionToken(c) {
+  const header = c.req.header('Authorization') || '';
+  const m = header.match(/^Bearer\s+(.+)$/i);
+  if (m) return m[1];
+  const cookie = c.req.header('Cookie') || '';
+  const found = cookie.split(';').map((s) => s.trim()).find((s) => s.startsWith('sh_token='));
+  return found ? found.slice('sh_token='.length) : null;
+}
+
 export const authMiddleware = async (c, next) => {
-  const token = c.req.header('Authorization')?.replace('Bearer ', '');
+  const token = sessionToken(c);
   if (!token) {
     return c.json({ error: 'Access denied. No token provided.' }, 401);
   }
@@ -184,5 +193,59 @@ export function createLogger(env) {
     debug: (stage, data) => emit("debug", stage, data),
     info: (stage, data) => emit("info", stage, data),
     error: (stage, data) => emit("error", stage, data),
+  };
+}
+
+// ============================================
+// Email provider abstraction (mock fallback)
+// Set EMAIL_PROVIDER=resend plus RESEND_API_KEY for real sending.
+// Mock mode logs to the server console and reports mocked=true.
+// ============================================
+export async function sendEmail(env, { to, subject, html }) {
+  const provider = String((env && env.EMAIL_PROVIDER) || "mock").toLowerCase();
+  if (provider === "resend" && env.RESEND_API_KEY) {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.RESEND_API_KEY },
+      body: JSON.stringify({ from: (env.EMAIL_FROM || "noreply@socialhub.example.com"), to, subject, html }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error("Email provider error " + resp.status + ": " + text.slice(0, 200));
+    }
+    return { sent: true, mocked: false };
+  }
+  console.log(JSON.stringify({ ts: new Date().toISOString(), level: "info", stage: "email-mock", to, subject }));
+  return { sent: true, mocked: true };
+}
+
+export function randomToken(bytes) {
+  const buf = crypto.getRandomValues(new Uint8Array(bytes || 32));
+  return Array.from(buf).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ============================================
+// D1 sliding-window rate limiter.
+// Usage: app.use("/auth/*", rateLimit({ windowSec: 600, max: 20 }))
+// ============================================
+export function rateLimit({ windowSec, max }) {
+  const win = windowSec || 600;
+  const limit = max || 20;
+  return async (c, next) => {
+    const ip = c.req.header("CF-Connecting-IP") || (c.req.header("X-Forwarded-For") || "").split(",")[0].trim() || "unknown";
+    const route = c.req.path;
+    try {
+      await c.env.DB.prepare("DELETE FROM dashboard_rate_events WHERE created_at < datetime('now', '-' || ? || ' seconds')").bind(win).run();
+      const row = await c.env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM dashboard_rate_events WHERE ip = ? AND route = ? AND created_at >= datetime('now', '-' || ? || ' seconds')"
+      ).bind(ip, route, win).first();
+      if (row && row.n >= limit) {
+        return c.json({ error: "Too many attempts. Please wait a few minutes and try again." }, 429);
+      }
+      await c.env.DB.prepare("INSERT INTO dashboard_rate_events (ip, route) VALUES (?, ?)").bind(ip, route).run();
+    } catch (err) {
+      try { c.get("log").error("ratelimit-fallback", { message: String(err.message || err) }); } catch {}
+    }
+    await next();
   };
 }

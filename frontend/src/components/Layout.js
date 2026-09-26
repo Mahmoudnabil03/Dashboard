@@ -38,8 +38,7 @@ function MobileTab({ to, end, icon: Icon, label }) {
 }
 export default function Layout() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const { logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
