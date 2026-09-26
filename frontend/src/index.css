@@ -5,33 +5,33 @@
 :root {
   /* SocialHub Dark-First Design System */
   /* Base */
-  --bg-base: #020617;
-  --bg-elevated: #0f172a;
-  --bg-elevated-hover: #1e293b;
-  --bg-card: #0f172a;
-  --bg-card-hover: #1e293b;
-  --bg-input: #0f172a;
-  --bg-input-focus: #1e293b;
+  --bg-base: #000000;
+  --bg-elevated: #000000;
+  --bg-elevated-hover: #0d0d0d;
+  --bg-card: #000000;
+  --bg-card-hover: #000000;
+  --bg-input: transparent;
+  --bg-input-focus: transparent;
   
   /* Borders */
-  --border-subtle: #1e293b;
-  --border-default: #334155;
-  --border-strong: #475569;
-  --border-focus: #0A5BFF;
+  --border-subtle: transparent;
+  --border-default: rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+  --border-focus: #8052ff;
   
   /* Text */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
-  --text-inverse: #020617;
-  --text-link: #60a5fa;
+  --text-primary: #ffffff;
+  --text-secondary: #9a9a9a;
+  --text-tertiary: #bdbdbd;
+  --text-inverse: #000000;
+  --text-link: #ffb829;
   
   /* Brand */
-  --brand-primary: #0A5BFF;
-  --brand-primary-hover: #1e6fff;
-  --brand-primary-muted: #0A5BFF1A;
-  --brand-secondary: #7c3aed;
-  --brand-accent: #06b6d4;
+  --brand-primary: #8052ff;
+  --brand-primary-hover: #9370ff;
+  --brand-primary-muted: #8052ff1f;
+  --brand-secondary: #8052ff;
+  --brand-accent: #15846e;
   
   /* Semantic */
   --success: #22c55e;
@@ -44,27 +44,27 @@
   --info-muted: #3b82f61A;
   
   /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #0A5BFF 0%, #7c3aed 100%);
-  --gradient-card: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-  --gradient-hero: linear-gradient(180deg, rgba(10, 91, 255, 0.08) 0%, transparent 100%);
+  --gradient-brand: linear-gradient(135deg, #8052ff 0%, #15846e 100%);
+  --gradient-card: none;
+  --gradient-hero: linear-gradient(180deg, rgba(128, 82, 255, 0.08) 0%, transparent 100%);
   
   /* Glass */
-  --glass-bg: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(148, 163, 184, 0.08);
-  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(0, 0, 0, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: none;
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 24px rgba(10, 91, 255, 0.2);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-glow: none;
   
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-sm: 12px;
+  --radius-md: 24px;
+  --radius-lg: 24px;
+  --radius-xl: 24px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
   
@@ -88,6 +88,20 @@
   --accent-violet: #a855f7;
   --accent-amber: #f59e0b;
 
+  /* Dala brand tokens */
+  --color-void: #000000;
+  --color-bone-white: #ffffff;
+  --color-ash-gray: #9a9a9a;
+  --color-silver-mist: #bdbdbd;
+  --color-electric-iris: #8052ff;
+  --color-saffron-spark: #ffb829;
+  --color-deep-verdant: #15846e;
+  --radius-3xl: 24px;
+  --radius-nav: 24px;
+  --radius-tags: 9999px;
+  --radius-cards: 24px;
+  --radius-buttons: 24px;
+  --page-max-width: 1280px;
   /* Z-index */
   --z-dropdown: 100;
   --z-sticky: 200;
@@ -137,7 +151,7 @@ body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg-base);
   color: var(--text-primary);
-  font-weight: 400;
+  font-weight: 200;
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
@@ -153,13 +167,13 @@ body {
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.25;
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
-h1 { font-size: clamp(1.875rem, 4vw, 2.5rem); }
+h1 { font-size: clamp(2.5rem, 6vw, 4.875rem); letter-spacing: -0.04em; }
 h2 { font-size: clamp(1.5rem, 3vw, 1.875rem); }
 h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); }
 h4 { font-size: clamp(1.125rem, 2vw, 1.25rem); }
@@ -235,22 +249,24 @@ label {
 .btn-primary {
   background: var(--brand-primary);
   color: white;
+  border-radius: 24px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--brand-primary-hover);
-  box-shadow: var(--shadow-glow);
 }
-
 .btn-secondary {
-  background: var(--bg-elevated);
+  background: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--border-default);
+  border: 1px solid transparent;
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-elevated-hover);
-  border-color: var(--border-strong);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: transparent;
 }
-
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
@@ -273,15 +289,14 @@ label {
 
 /* Cards */
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   transition: all var(--transition-base);
 }
 
 .card:hover {
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-md);
+  border-color: transparent;
 }
 
 .card-glass {
@@ -445,7 +460,7 @@ label {
 .tabs { display: flex; gap: 0.25rem; background: var(--bg-elevated); padding: 0.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); }
 .tab { padding: 0.5rem 1rem; font-size: 0.8125rem; font-weight: 500; color: var(--text-tertiary); border-radius: var(--radius-md); transition: all var(--transition-fast); }
 .tab:hover { color: var(--text-primary); background: var(--bg-base); }
-.tab.active { color: var(--text-primary); background: var(--bg-base); box-shadow: var(--shadow-sm); }
+.tab.active { color: var(--text-primary); background: transparent; box-shadow: inset 0 -2px 0 var(--brand-primary); border-radius: 0; }
 
 /* Dropdown */
 .dropdown { position: relative; }
@@ -466,7 +481,7 @@ label {
 .empty-state-desc { font-size: 0.875rem; max-width: 280px; margin-bottom: 1.5rem; }
 
 /* Loading */
-.skeleton { background: linear-gradient(90deg, var(--border-subtle) 25%, var(--border-default) 50%, var(--border-subtle) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-md); }
+.skeleton { background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-md); }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 /* Modal */
@@ -526,5 +541,8 @@ label {
 }
 
 /* Skeleton loader */
-.skeleton { background: linear-gradient(90deg, var(--border-subtle) 25%, var(--border-default) 50%, var(--border-subtle) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-md); }
+.skeleton { background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.08) 50%, transparent 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-md); }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* Dala sidebar nav labels: 14px uppercase, semibold */
+aside nav a { text-transform: uppercase; font-size: 14px; font-weight: 600; letter-spacing: 0.025em; }

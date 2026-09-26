@@ -14,7 +14,7 @@ const platformIcons = {
 
 const platformColors = {
   twitter: 'bg-[#1DA1F2]',
-  instagram: 'bg-gradient-to-br from-[#feda75] via-[#d62976] to-[#4f5bd5]',
+  instagram: 'bg-[#8052ff]',
   facebook: 'bg-[#0866FF]',
   linkedin: 'bg-[#0A66C2]',
   whatsapp: 'bg-[#25D366]',

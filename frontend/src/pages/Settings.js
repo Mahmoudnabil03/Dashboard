@@ -325,7 +325,7 @@ function BrandTab({ brand, setBrand }) {
           value={brand.brand_colors}
           onChange={(e) => setBrand({...brand, brand_colors: e.target.value})}
           className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-blue)] focus:border-transparent transition"
-          placeholder="#0A5BFF, #7c3aed, #06b6d4"
+          placeholder="#8052ff, #ffb829, #15846e"
         />
       </div>
       <div>
