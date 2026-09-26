@@ -304,7 +304,7 @@ ai.post("/moderate", async (c) => {
   let score = null;
   if (c.env.AI) {
     try {
-      const out = await c.env.AI.run("@cf/huggingface/distilbert-sst-2-intent-model", { text: t.slice(0, 2000) });
+      const out = await c.env.AI.run("@cf/huggingface/distilbert-sst-2-int8", { text: t.slice(0, 2000) });
       const top = Array.isArray(out) ? out[0] : out;
       if (top && top.label) {
         sentiment = /pos/i.test(top.label) ? "positive" : "negative";
