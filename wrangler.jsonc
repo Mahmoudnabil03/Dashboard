@@ -2,6 +2,7 @@
   "name": "dashboard",
   "main": "worker/index.js",
   "compatibility_date": "2025-08-01",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./frontend/build",
     "binding": "ASSETS",

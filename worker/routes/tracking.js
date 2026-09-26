@@ -321,4 +321,142 @@ async function testLinkedInInsightTag(integration) {
   return { success: true, message: `LinkedIn Insight Tag Partner ID saved: ${integration.pixel_id}` };
 }
 
+// ============================================
+// WEBHOOK MANAGEMENT
+// ============================================
+
+// Generate/regenerate webhook verify token
+tracking.post('/integrations/:id/webhook/token', async (c) => {
+  const userId = c.get('userId');
+  const integrationId = c.req.param('id');
+  
+  const integration = await c.env.DB
+    .prepare('SELECT * FROM dashboard_tracking_integrations WHERE id = ? AND workspace_id = ?')
+    .bind(integrationId, userId)
+    .first();
+  
+  if (!integration) return c.json({ error: 'Integration not found' }, 404);
+  
+  // Only for providers that support webhooks
+  const webhookProviders = ['meta_pixel', 'meta_capi', 'instagram', 'facebook'];
+  if (!webhookProviders.includes(integration.provider)) {
+    return c.json({ error: 'Webhooks not supported for this provider' }, 400);
+  }
+  
+  // Generate secure random token
+  const token = crypto.randomUUID().replace(/-/g, '');
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const callbackUrl = `${baseUrl.replace('/api', '')}/api/social/${integration.provider === 'meta_pixel' || integration.provider === 'meta_capi' ? 'facebook' : 'instagram'}/webhook`;
+  
+  await c.env.DB.prepare(
+    `UPDATE dashboard_tracking_integrations SET 
+       webhook_verify_token = ?,
+       webhook_callback_url = ?,
+       updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(token, callbackUrl, integrationId).run();
+  
+  return c.json({ 
+    webhook_verify_token: token,
+    webhook_callback_url: callbackUrl,
+    message: 'Webhook token generated successfully'
+  });
+});
+
+// Get webhook configuration
+tracking.get('/integrations/:id/webhook', async (c) => {
+  const userId = c.get('userId');
+  const integrationId = c.req.param('id');
+  
+  const integration = await c.env.DB
+    .prepare('SELECT id, provider, webhook_verify_token, webhook_callback_url, webhook_subscribed FROM dashboard_tracking_integrations WHERE id = ? AND workspace_id = ?')
+    .bind(integrationId, userId)
+    .first();
+  
+  if (!integration) return c.json({ error: 'Integration not found' }, 404);
+  
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const platform = integration.provider === 'meta_pixel' || integration.provider === 'meta_capi' ? 'facebook' : 'instagram';
+  const callbackUrl = integration.webhook_callback_url || `${baseUrl.replace('/api', '')}/api/social/${platform}/webhook`;
+  
+  return c.json({
+    ...integration,
+    webhook_callback_url: callbackUrl,
+    webhook_fields: integration.provider === 'meta_pixel' || integration.provider === 'meta_capi' 
+      ? ['feed', 'messages', 'comments', 'leadgen']
+      : ['comments', 'mentions', 'story_insights']
+  });
+});
+
+// Subscribe to webhook (calls provider API to register)
+tracking.post('/integrations/:id/webhook/subscribe', async (c) => {
+  const userId = c.get('userId');
+  const integrationId = c.req.param('id');
+  
+  const integration = await c.env.DB
+    .prepare('SELECT * FROM dashboard_tracking_integrations WHERE id = ? AND workspace_id = ?')
+    .bind(integrationId, userId)
+    .first();
+  
+  if (!integration) return c.json({ error: 'Integration not found' }, 404);
+  if (!integration.webhook_verify_token) {
+    return c.json({ error: 'Generate webhook token first' }, 400);
+  }
+  
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const platform = integration.provider === 'meta_pixel' || integration.provider === 'meta_capi' ? 'facebook' : 'instagram';
+  const callbackUrl = `${baseUrl.replace('/api', '')}/api/social/${platform}/webhook`;
+  
+  try {
+    if (platform === 'facebook') {
+      // Subscribe to Facebook page webhooks
+      const resp = await fetch(`https://graph.facebook.com/v18.0/${integration.pixel_id}/subscribed_apps?access_token=${integration.access_token}&subscribed_fields=feed,messages,comments,leadgen`, {
+        method: 'POST'
+      });
+      
+      if (!resp.ok) {
+        const err = await resp.text();
+        return c.json({ success: false, message: `Facebook subscription failed: ${err}` }, 500);
+      }
+    }
+    
+    await c.env.DB.prepare(
+      `UPDATE dashboard_tracking_integrations SET webhook_subscribed = 1, webhook_callback_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).bind(callbackUrl, integrationId).run();
+    
+    return c.json({ success: true, message: 'Webhook subscribed successfully', callback_url: callbackUrl });
+  } catch (err) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+});
+
+// Unsubscribe from webhook
+tracking.post('/integrations/:id/webhook/unsubscribe', async (c) => {
+  const userId = c.get('userId');
+  const integrationId = c.req.param('id');
+  
+  const integration = await c.env.DB
+    .prepare('SELECT * FROM dashboard_tracking_integrations WHERE id = ? AND workspace_id = ?')
+    .bind(integrationId, userId)
+    .first();
+  
+  if (!integration) return c.json({ error: 'Integration not found' }, 404);
+  
+  try {
+    if (integration.provider === 'meta_pixel' || integration.provider === 'meta_capi') {
+      await fetch(`https://graph.facebook.com/v18.0/${integration.pixel_id}/subscribed_apps?access_token=${integration.access_token}`, {
+        method: 'DELETE'
+      });
+    }
+    
+    await c.env.DB.prepare(
+      `UPDATE dashboard_tracking_integrations SET webhook_subscribed = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).bind(integrationId).run();
+    
+    return c.json({ success: true, message: 'Webhook unsubscribed' });
+  } catch (err) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+});
+
 export default tracking;

@@ -532,4 +532,443 @@ social.post('/instagram/webhook', async (c) => {
   return c.json({ success: true });
 });
 
+// ============================================
+// TWITTER/X WEBHOOKS (Account Activity API)
+// ============================================
+
+// CRC check for webhook registration
+social.get('/twitter/webhook/crc', async (c) => {
+  const token = c.req.query('crc_token');
+  const consumerSecret = c.env.TWITTER_CLIENT_SECRET;
+  
+  if (!token || !consumerSecret) {
+    return c.text('Missing crc_token or consumer secret', 400);
+  }
+  
+  // Use Web Crypto API for HMAC-SHA256
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(consumerSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(token));
+  const responseToken = 'sha256=' + btoa(String.fromCharCode(...new Uint8Array(signature)));
+  
+  return c.json({ response_token: responseToken });
+});
+
+// Receive Twitter Account Activity events
+social.post('/twitter/webhook', async (c) => {
+  const body = await c.req.json();
+  console.log('Twitter webhook:', JSON.stringify(body));
+  
+  // Process direct messages, tweets, follows, etc.
+  if (body.direct_message_events) {
+    for (const event of body.direct_message_events) {
+      console.log('Twitter DM:', event);
+    }
+  }
+  if (body.tweet_create_events) {
+    for (const tweet of body.tweet_create_events) {
+      console.log('Tweet created:', tweet);
+    }
+  }
+  
+  return c.json({ success: true });
+});
+
+// ============================================
+// LINKEDIN WEBHOOKS
+// ============================================
+
+// Verify webhook subscription
+social.get('/linkedin/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const challenge = c.req.query('hub.challenge');
+  const verifyToken = c.req.query('hub.verify_token');
+  const expectedToken = c.env.LINKEDIN_WEBHOOK_VERIFY_TOKEN;
+
+  if (mode === 'subscribe' && verifyToken === expectedToken) {
+    console.log('LinkedIn webhook verified');
+    return c.text(challenge);
+  }
+  return c.text('Forbidden', 403);
+});
+
+// Receive LinkedIn events
+social.post('/linkedin/webhook', async (c) => {
+  const body = await c.req.json();
+  console.log('LinkedIn webhook:', JSON.stringify(body));
+  return c.json({ success: true });
+});
+
+// ============================================
+// TIKTOK WEBHOOKS
+// ============================================
+
+// Verify webhook subscription
+social.get('/tiktok/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const challenge = c.req.query('hub.challenge');
+  const verifyToken = c.req.query('hub.verify_token');
+  const expectedToken = c.env.TIKTOK_WEBHOOK_VERIFY_TOKEN;
+
+  if (mode === 'subscribe' && verifyToken === expectedToken) {
+    console.log('TikTok webhook verified');
+    return c.text(challenge);
+  }
+  return c.text('Forbidden', 403);
+});
+
+// Receive TikTok events
+social.post('/tiktok/webhook', async (c) => {
+  const body = await c.req.json();
+  console.log('TikTok webhook:', JSON.stringify(body));
+  return c.json({ success: true });
+});
+
+// ============================================
+// YOUTUBE WEBHOOKS (PubSubHubbub)
+// ============================================
+
+// Verify webhook subscription
+social.get('/youtube/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const challenge = c.req.query('hub.challenge');
+  const verifyToken = c.req.query('hub.verify_token');
+  const expectedToken = c.env.YOUTUBE_WEBHOOK_VERIFY_TOKEN;
+
+  if (mode === 'subscribe' && verifyToken === expectedToken) {
+    console.log('YouTube webhook verified');
+    return c.text(challenge);
+  }
+  return c.text('Forbidden', 403);
+});
+
+// Receive YouTube notifications
+social.post('/youtube/webhook', async (c) => {
+  const body = await c.req.text(); // XML payload
+  console.log('YouTube webhook:', body);
+  return c.text('OK');
+});
+
+// ============================================
+// UNIFIED WEBHOOK MANAGEMENT (for all platforms)
+// ============================================
+
+// Generate webhook verify token for a connected account
+social.post('/accounts/:id/webhook/token', async (c) => {
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const accountId = c.req.param('id');
+  const account = await c.env.DB
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ?')
+    .bind(accountId, workspaceId)
+    .first();
+  
+  if (!account) return c.json({ error: 'Account not found' }, 404);
+  
+  // Check if platform supports webhooks
+  const webhookPlatforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'youtube'];
+  if (!webhookPlatforms.includes(account.platform)) {
+    return c.json({ error: 'Webhooks not supported for this platform' }, 400);
+  }
+  
+  // Generate secure random token
+  const token = crypto.randomUUID().replace(/-/g, '');
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const callbackUrl = `${baseUrl.replace('/api', '')}/api/social/${account.platform}/webhook`;
+  
+  await c.env.DB.prepare(
+    `UPDATE dashboard_social_accounts SET 
+       webhook_verify_token = ?,
+       webhook_callback_url = ?,
+       updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(token, callbackUrl, accountId).run();
+  
+  return c.json({ 
+    platform: account.platform,
+    webhook_verify_token: token,
+    webhook_callback_url: callbackUrl,
+    message: 'Webhook token generated successfully'
+  });
+});
+
+// Get webhook configuration for an account
+social.get('/accounts/:id/webhook', async (c) => {
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const accountId = c.req.param('id');
+  const account = await c.env.DB
+    .prepare('SELECT id, platform, webhook_verify_token, webhook_callback_url, webhook_subscribed FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ?')
+    .bind(accountId, workspaceId)
+    .first();
+  
+  if (!account) return c.json({ error: 'Account not found' }, 404);
+  
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const callbackUrl = account.webhook_callback_url || `${baseUrl.replace('/api', '')}/api/social/${account.platform}/webhook`;
+  
+  // Platform-specific webhook fields
+  const webhookFields = {
+    facebook: ['feed', 'messages', 'comments', 'leadgen'],
+    instagram: ['comments', 'mentions', 'story_insights'],
+    twitter: ['direct_messages', 'tweets', 'follows', 'likes'],
+    linkedin: ['shares', 'comments', 'likes', 'follows'],
+    tiktok: ['video_create', 'video_delete', 'user_follow'],
+    youtube: ['video.upload', 'video.update', 'video.delete', 'channel.subscription']
+  };
+  
+  return c.json({
+    ...account,
+    webhook_callback_url: callbackUrl,
+    webhook_fields: webhookFields[account.platform] || [],
+    webhook_setup_docs: `https://developers.${account.platform === 'twitter' ? 'x' : account.platform}.com/docs/webhooks`
+  });
+});
+
+// Subscribe to webhook (platform-specific)
+social.post('/accounts/:id/webhook/subscribe', async (c) => {
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const accountId = c.req.param('id');
+  const account = await c.env.DB
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ?')
+    .bind(accountId, workspaceId)
+    .first();
+  
+  if (!account) return c.json({ error: 'Account not found' }, 404);
+  if (!account.webhook_verify_token) {
+    return c.json({ error: 'Generate webhook token first' }, 400);
+  }
+  
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const callbackUrl = `${baseUrl.replace('/api', '')}/api/social/${account.platform}/webhook`;
+  
+  try {
+    let success = false;
+    let message = '';
+    
+    switch (account.platform) {
+      case 'facebook':
+      case 'instagram': {
+        // Use the tracking integration subscription logic
+        const resp = await fetch(`https://graph.facebook.com/v18.0/${account.account_data ? JSON.parse(account.account_data).id : ''}/subscribed_apps?access_token=${account.access_token}&subscribed_fields=feed,messages,comments,leadgen`, {
+          method: 'POST'
+        });
+        success = resp.ok;
+        if (!success) {
+          const err = await resp.text();
+          message = `Meta subscription failed: ${err}`;
+        } else {
+          message = 'Meta webhook subscribed';
+        }
+        break;
+      }
+      case 'twitter': {
+        // Twitter Account Activity API subscription
+        const resp = await fetch('https://api.twitter.com/1.1/account_activity/all/prod/subscriptions.json', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${account.access_token}` }
+        });
+        success = resp.ok;
+        if (!success) {
+          const err = await resp.text();
+          message = `Twitter subscription failed: ${err}`;
+        } else {
+          message = 'Twitter webhook subscribed';
+        }
+        break;
+      }
+      case 'linkedin': {
+        // LinkedIn event notifications require app-level webhook config
+        // Usually configured in developer portal, not via API
+        message = 'LinkedIn webhooks configured in developer portal';
+        success = true;
+        break;
+      }
+      case 'tiktok': {
+        // TikTok webhook subscription
+        const resp = await fetch('https://open.tiktokapis.com/v2/webhook/subscribe/', {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${account.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: callbackUrl, events: ['video_create', 'video_delete', 'user_follow'] })
+        });
+        success = resp.ok;
+        if (!success) {
+          const err = await resp.text();
+          message = `TikTok subscription failed: ${err}`;
+        } else {
+          message = 'TikTok webhook subscribed';
+        }
+        break;
+      }
+      case 'youtube': {
+        // YouTube PubSubHubbub subscription
+        const hubUrl = 'https://pubsubhubbub.appspot.com/subscribe';
+        const topicUrl = `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${account.account_data ? JSON.parse(account.account_data).id : ''}`;
+        const resp = await fetch(hubUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            'hub.mode': 'subscribe',
+            'hub.topic': topicUrl,
+            'hub.callback': callbackUrl,
+            'hub.verify': 'async',
+            'hub.verify_token': account.webhook_verify_token
+          })
+        });
+        success = resp.ok;
+        if (!success) {
+          const err = await resp.text();
+          message = `YouTube subscription failed: ${err}`;
+        } else {
+          message = 'YouTube webhook subscribed';
+        }
+        break;
+      }
+      default:
+        return c.json({ error: 'Platform not supported for webhook subscription' }, 400);
+    }
+    
+    if (success) {
+      await c.env.DB.prepare(
+        `UPDATE dashboard_social_accounts SET webhook_subscribed = 1, webhook_callback_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+      ).bind(callbackUrl, accountId).run();
+    }
+    
+    return c.json({ success, message, callback_url: callbackUrl });
+  } catch (err) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+});
+
+// Unsubscribe from webhook
+social.post('/accounts/:id/webhook/unsubscribe', async (c) => {
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const accountId = c.req.param('id');
+  const account = await c.env.DB
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ?')
+    .bind(accountId, workspaceId)
+    .first();
+  
+  if (!account) return c.json({ error: 'Account not found' }, 404);
+  
+  try {
+    let success = false;
+    
+    switch (account.platform) {
+      case 'facebook':
+      case 'instagram': {
+        await fetch(`https://graph.facebook.com/v18.0/${account.account_data ? JSON.parse(account.account_data).id : ''}/subscribed_apps?access_token=${account.access_token}`, {
+          method: 'DELETE'
+        });
+        success = true;
+        break;
+      }
+      case 'twitter': {
+        await fetch('https://api.twitter.com/1.1/account_activity/all/prod/subscriptions.json', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${account.access_token}` }
+        });
+        success = true;
+        break;
+      }
+      case 'tiktok': {
+        await fetch('https://open.tiktokapis.com/v2/webhook/unsubscribe/', {
+          method: 'POST',
+          headers: { 
+            Authorization: `Bearer ${account.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: account.webhook_callback_url })
+        });
+        success = true;
+        break;
+      }
+      case 'youtube': {
+        const hubUrl = 'https://pubsubhubbub.appspot.com/subscribe';
+        const topicUrl = `https://www.youtube.com/xml/feeds/videos.xml?channel_id=${account.account_data ? JSON.parse(account.account_data).id : ''}`;
+        await fetch(hubUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            'hub.mode': 'unsubscribe',
+            'hub.topic': topicUrl,
+            'hub.callback': account.webhook_callback_url,
+            'hub.verify': 'async',
+            'hub.verify_token': account.webhook_verify_token
+          })
+        });
+        success = true;
+        break;
+      }
+    }
+    
+    if (success) {
+      await c.env.DB.prepare(
+        `UPDATE dashboard_social_accounts SET webhook_subscribed = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+      ).bind(accountId).run();
+    }
+    
+    return c.json({ success: true, message: 'Webhook unsubscribed' });
+  } catch (err) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+});
+
+// Test webhook endpoint
+social.post('/accounts/:id/webhook/test', async (c) => {
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  const accountId = c.req.param('id');
+  const account = await c.env.DB
+    .prepare('SELECT * FROM dashboard_social_accounts WHERE id = ? AND workspace_id = ?')
+    .bind(accountId, workspaceId)
+    .first();
+  
+  if (!account) return c.json({ error: 'Account not found' }, 404);
+  
+  // Send a test event to the webhook
+  const baseUrl = c.env.FRONTEND_URL || new URL(c.req.url).origin;
+  const callbackUrl = `${baseUrl.replace('/api', '')}/api/social/${account.platform}/webhook`;
+  
+  try {
+    const testPayload = {
+      test: true,
+      platform: account.platform,
+      timestamp: new Date().toISOString(),
+      message: 'This is a test webhook event from SocialHub'
+    };
+    
+    await fetch(callbackUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testPayload)
+    });
+    
+    return c.json({ success: true, message: 'Test webhook sent' });
+  } catch (err) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+});
+
 export default social;
