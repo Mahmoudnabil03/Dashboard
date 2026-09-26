@@ -192,6 +192,40 @@ ai.post('/auto-reply', async (c) => {
   }
 });
 
+// AI CHAT ENDPOINT (for interactive chat)
+ai.post('/chat', async (c) => {
+  const { agent_id, message, history } = await body(c);
+  const userId = c.get('userId');
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: 'Workspace not found' }, 404);
+  
+  // Verify agent exists and is active
+  const agent = await c.env.DB.prepare('SELECT * FROM dashboard_ai_agents WHERE id = ? AND workspace_id = ? AND is_active = 1').bind(agent_id, workspaceId).first();
+  if (!agent) return c.json({ error: 'Agent not found or inactive' }, 404);
+  
+  try {
+    // Build system prompt based on agent config
+    const config = JSON.parse(agent.config || '{}');
+    const tone = config.tone || 'professional';
+    const systemPrompt = `You are SocialHub AI, a professional marketing assistant. 
+Tone: ${tone}.
+Help with: marketing strategy, campaign planning, content creation, social media management, analytics interpretation, and creative ideation.
+Be concise, actionable, and professional. Use formatting for readability.`;
+    
+    // Build messages array with history
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []).slice(-10).map(h => ({ role: h.role, content: h.content })),
+      { role: 'user', content: message }
+    ];
+    
+    const reply = await openaiChat(c.env, messages, 800);
+    return c.json({ reply });
+  } catch (err) {
+    return c.json({ error: err.message }, err.code === 'NO_KEY' ? 400 : 500);
+  }
+});
+
 // CONTENT SUGGESTIONS
 ai.post('/suggestions', async (c) => {
   const { platform, topic, targetAudience } = await body(c);

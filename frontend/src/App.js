@@ -14,6 +14,10 @@ import Inbox from './pages/Inbox';
 import Settings from './pages/Settings';
 import Campaigns from './pages/Campaigns';
 import Content from './pages/Content';
+import Reports from './pages/Reports';
+import Team from './pages/Team';
+import Billing from './pages/Billing';
+import Legal from './pages/Legal';
 import Layout from './components/Layout';
 
 const queryClient = new QueryClient();
@@ -70,6 +74,10 @@ function App() {
           <Routes>
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
+              <Route path="/terms" element={<Legal page="terms" />} />
+              <Route path="/privacy" element={<Legal page="privacy" />} />
+              <Route path="/cookies" element={<Legal page="cookies" />} />
+              <Route path="/compliance" element={<Legal page="compliance" />} />
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Layout />}>
@@ -84,6 +92,9 @@ function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="campaigns" element={<Campaigns />} />
                 <Route path="content" element={<Content />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="team" element={<Team />} />
+                <Route path="billing" element={<Billing />} />
               </Route>
             </Route>
           </Routes>
