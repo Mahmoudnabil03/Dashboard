@@ -28,6 +28,14 @@ const navItems = [
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
+function MobileTab({ to, end, icon: Icon, label }) {
+  return (
+    <NavLink to={to} end={end} className={({ isActive }) => "flex flex-col items-center gap-1 py-2.5 " + (isActive ? "text-[var(--brand-primary)]" : "text-[var(--text-tertiary)]")}>
+      <Icon size={22} />
+      <span className="text-[10px] font-medium">{label}</span>
+    </NavLink>
+  );
+}
 export default function Layout() {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -124,11 +132,20 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-auto bg-[var(--bg-primary)]">
-          <div className="p-4 lg:p-8">
+          <div className="p-4 pb-24 lg:p-8 lg:pb-8">
             <Outlet />
           </div>
         </main>
 
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[150] bg-[var(--bg-elevated)]/95 backdrop-blur border-t border-[var(--border-subtle)]" aria-label="Mobile navigation">
+          <div className="grid grid-cols-5">
+            <MobileTab to="/" end={true} icon={LayoutDashboard} label="Home" />
+            <MobileTab to="/posts" icon={Send} label="Posts" />
+            <MobileTab to="/inbox" icon={Inbox} label="Inbox" />
+            <MobileTab to="/ai-agent" icon={Bot} label="AI" />
+            <button onClick={() => setSidebarOpen(true)} className="flex flex-col items-center gap-1 py-2.5 text-[var(--text-tertiary)]" aria-label="Open menu"><Menu size={22} /><span className="text-[10px] font-medium">Menu</span></button>
+          </div>
+        </nav>
         {/* Legal Footer */}
         <LegalFooter />
       </div>
