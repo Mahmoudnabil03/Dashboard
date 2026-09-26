@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Calendar, Type, Image, Video, Hash, Save, Loader, Filter, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -9,7 +9,7 @@ const STATUSES = [
   { value: 'draft', label: 'Draft', color: 'bg-blue-500' },
   { value: 'ready', label: 'Ready', color: 'bg-amber-500' },
   { value: 'scheduled', label: 'Scheduled', color: 'bg-purple-500' },
-  { value: 'published', label: 'Published', color: 'bg-green-500' },
+  { value: 'published', label: 'Published', color: 'bg-[var(--success-muted)]0' },
 ];
 
 const PLATFORMS = ['twitter', 'instagram', 'facebook', 'linkedin', 'tiktok', 'youtube', 'x'];

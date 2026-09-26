@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -45,7 +45,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A5BFF]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -83,24 +83,24 @@ export default function Dashboard() {
   ];
 
   const colorMap = {
-    blue: 'bg-blue-100 text-blue-600',
-    amber: 'bg-amber-100 text-amber-600',
-    violet: 'bg-violet-100 text-violet-600',
-    green: 'bg-green-100 text-green-600',
+    blue: 'bg-blue-100 text-[var(--brand-primary)]',
+    amber: 'bg-[var(--warning-muted)] text-[var(--warning)]',
+    violet: 'bg-[var(--brand-primary-muted)] text-[var(--brand-secondary)]',
+    green: 'bg-[var(--success-muted)] text-[var(--success)]',
   };
 
   return (
     <div>
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-[460] text-[#292827]">SocialHub</h1>
-          <p className="text-sm text-[#666666]">Manage. Connect. Grow.</p>
+          <h1 className="text-3xl font-[460] text-[var(--text-primary)]">SocialHub</h1>
+          <p className="text-sm text-[var(--text-secondary)]">Manage. Connect. Grow.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to="/posts" className="bg-[#0A5BFF] text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition text-sm">
+          <Link to="/posts" className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg flex items-center hover:bg-[var(--brand-primary-hover)] transition text-sm">
             <Plus size={18} className="mr-1.5" /> New Post
           </Link>
-          <Link to="/accounts" className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center hover:bg-gray-50 transition text-sm">
+          <Link to="/accounts" className="bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] px-4 py-2 rounded-lg flex items-center hover:bg-[var(--bg-elevated)] transition text-sm">
             <Link2 size={18} className="mr-1.5" /> Connect Account
           </Link>
         </div>
@@ -109,11 +109,11 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {kpis.map((kpi) => (
-          <Link key={kpi.label} to={kpi.to} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
+          <Link key={kpi.label} to={kpi.to} className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)] hover:shadow-md transition">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{kpi.label}</p>
-                <p className="text-2xl font-bold text-gray-800">{kpi.value}</p>
+                <p className="text-sm text-[var(--text-secondary)]">{kpi.label}</p>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">{kpi.value}</p>
               </div>
               <div className={`${colorMap[kpi.color]} p-3 rounded-lg`}>
                 <kpi.icon size={24} />
@@ -125,9 +125,9 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Send size={18} className="mr-2 text-blue-600" /> Posts by Status
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)]">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center">
+            <Send size={18} className="mr-2 text-[var(--brand-primary)]" /> Posts by Status
           </h3>
           {posts.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -148,9 +148,9 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Link2 size={18} className="mr-2 text-violet-600" /> Posts by Platform
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)]">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center">
+            <Link2 size={18} className="mr-2 text-[var(--brand-secondary)]" /> Posts by Platform
           </h3>
           {platformChart.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -171,26 +171,26 @@ export default function Dashboard() {
       {/* Lower panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upcoming posts */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <CalendarDays size={18} className="mr-2 text-amber-600" /> Upcoming
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] flex items-center">
+              <CalendarDays size={18} className="mr-2 text-[var(--warning)]" /> Upcoming
             </h3>
-            <Link to="/calendar" className="text-sm text-blue-600 hover:text-blue-700 flex items-center">
+            <Link to="/calendar" className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] flex items-center">
               Calendar <ArrowRight size={14} className="ml-1" />
             </Link>
           </div>
           {upcomingPosts.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-6">No scheduled posts</p>
+            <p className="text-[var(--text-secondary)] text-sm text-center py-6">No scheduled posts</p>
           ) : (
             <div className="space-y-3">
               {upcomingPosts.map((p) => (
-                <div key={p.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={p.id} className="flex items-start justify-between p-3 bg-[var(--bg-elevated)] rounded-lg">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{p.content?.slice(0, 50) || '(no text)'}</p>
-                    <span className="text-xs text-gray-400 capitalize">{p.platform || 'all'}</span>
+                    <p className="text-sm text-[var(--text-primary)] truncate">{p.content?.slice(0, 50) || '(no text)'}</p>
+                    <span className="text-xs text-[var(--text-tertiary)] capitalize">{p.platform || 'all'}</span>
                   </div>
-                  <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                  <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap ml-2">
                     {format(parseISO(p.scheduled_time), 'MMM d, p')}
                   </span>
                 </div>
@@ -200,26 +200,26 @@ export default function Dashboard() {
         </div>
 
         {/* Recent posts */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <Send size={18} className="mr-2 text-blue-600" /> Recent Posts
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] flex items-center">
+              <Send size={18} className="mr-2 text-[var(--brand-primary)]" /> Recent Posts
             </h3>
-            <Link to="/posts" className="text-sm text-blue-600 hover:text-blue-700 flex items-center">
+            <Link to="/posts" className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] flex items-center">
               All <ArrowRight size={14} className="ml-1" />
             </Link>
           </div>
           {posts.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-6">No posts yet</p>
+            <p className="text-[var(--text-secondary)] text-sm text-center py-6">No posts yet</p>
           ) : (
             <div className="space-y-3">
               {posts.slice(0, 4).map((p) => (
-                <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={p.id} className="flex items-center justify-between p-3 bg-[var(--bg-elevated)] rounded-lg">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{p.content?.slice(0, 40) || '(media post)'}</p>
-                    <span className="text-xs text-gray-400 capitalize">{p.status}</span>
+                    <p className="text-sm text-[var(--text-primary)] truncate">{p.content?.slice(0, 40) || '(media post)'}</p>
+                    <span className="text-xs text-[var(--text-tertiary)] capitalize">{p.status}</span>
                   </div>
-                  <span className="text-xs font-medium text-blue-600 whitespace-nowrap ml-2 capitalize">{p.platform || '—'}</span>
+                  <span className="text-xs font-medium text-[var(--brand-primary)] whitespace-nowrap ml-2 capitalize">{p.platform || '—'}</span>
                 </div>
               ))}
             </div>
@@ -227,26 +227,26 @@ export default function Dashboard() {
         </div>
 
         {/* Connected accounts */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm p-6 border border-[var(--border-subtle)]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <Link2 size={18} className="mr-2 text-gray-600" /> Accounts
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] flex items-center">
+              <Link2 size={18} className="mr-2 text-[var(--text-secondary)]" /> Accounts
             </h3>
-            <Link to="/accounts" className="text-sm text-blue-600 hover:text-blue-700 flex items-center">
+            <Link to="/accounts" className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] flex items-center">
               Manage <ArrowRight size={14} className="ml-1" />
             </Link>
           </div>
           {accounts.length === 0 ? (
             <div className="text-center py-6">
-              <p className="text-gray-500 text-sm mb-3">No accounts connected</p>
-              <Link to="/accounts" className="text-blue-600 hover:text-blue-700 text-sm">Connect a platform</Link>
+              <p className="text-[var(--text-secondary)] text-sm mb-3">No accounts connected</p>
+              <Link to="/accounts" className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] text-sm">Connect a platform</Link>
             </div>
           ) : (
             <div className="space-y-2">
               {accounts.map((a) => (
-                <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-800 capitalize">{a.platform}</span>
-                  <span className="text-xs text-gray-500">@{a.username}</span>
+                <div key={a.id} className="flex items-center justify-between p-3 bg-[var(--bg-elevated)] rounded-lg">
+                  <span className="text-sm text-[var(--text-primary)] capitalize">{a.platform}</span>
+                  <span className="text-xs text-[var(--text-secondary)]">@{a.username}</span>
                 </div>
               ))}
             </div>
@@ -259,10 +259,10 @@ export default function Dashboard() {
 
 function EmptyChart({ label, to, cta }) {
   return (
-    <div className="flex flex-col items-center justify-center h-[260px] text-gray-400">
+    <div className="flex flex-col items-center justify-center h-[260px] text-[var(--text-tertiary)]">
       <Sparkles size={32} className="mb-2" />
       <p className="text-sm">{label}</p>
-      <Link to={to} className="mt-2 text-sm text-blue-600 hover:text-blue-700">{cta}</Link>
+      <Link to={to} className="mt-2 text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]">{cta}</Link>
     </div>
   );
 }

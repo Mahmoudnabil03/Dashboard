@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, DollarSign, Target, Calendar, BarChart2, Save, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -6,7 +6,7 @@ import api from '../api';
 const STATUSES = [
   { value: 'draft', label: 'Draft', color: 'bg-gray-500' },
   { value: 'planned', label: 'Planned', color: 'bg-blue-500' },
-  { value: 'active', label: 'Active', color: 'bg-green-500' },
+  { value: 'active', label: 'Active', color: 'bg-[var(--success-muted)]0' },
   { value: 'paused', label: 'Paused', color: 'bg-amber-500' },
   { value: 'completed', label: 'Completed', color: 'bg-purple-500' },
   { value: 'archived', label: 'Archived', color: 'bg-gray-400' },

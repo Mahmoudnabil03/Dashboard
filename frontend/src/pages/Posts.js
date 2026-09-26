@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Plus, Calendar, Trash2, Home, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -113,10 +113,10 @@ export default function Posts() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Posts</h1>
+        <h1 className="text-3xl font-bold text-[var(--text-primary)]">Posts</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition"
+          className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg flex items-center hover:bg-[var(--brand-primary-hover)] transition"
         >
           <Plus size={20} className="mr-2" />
           New Post
@@ -124,14 +124,14 @@ export default function Posts() {
       </div>
 
       {/* Posts List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-subtle)]">
         {posts.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-[var(--text-secondary)]">
+            <Calendar size={48} className="mx-auto mb-4 text-[var(--text-tertiary)]" />
             <p>No posts scheduled yet</p>
             <button
               onClick={() => setShowModal(true)}
-              className="mt-4 text-blue-600 hover:text-blue-700"
+              className="mt-4 text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
             >
               Create your first post
             </button>
@@ -139,11 +139,11 @@ export default function Posts() {
         ) : (
           <div className="divide-y">
             {posts.map((post) => (
-              <div key={post.id} className="p-6 hover:bg-gray-50 transition">
+              <div key={post.id} className="p-6 hover:bg-[var(--bg-elevated)] transition">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-gray-800 mb-2 whitespace-pre-wrap">{post.content}</p>
-                    <div className="flex items-center flex-wrap gap-3 text-sm text-gray-500">
+                    <p className="text-[var(--text-primary)] mb-2 whitespace-pre-wrap">{post.content}</p>
+                    <div className="flex items-center flex-wrap gap-3 text-sm text-[var(--text-secondary)]">
                       {post.scheduled_time && (
                         <span className="flex items-center">
                           <Calendar size={16} className="mr-1" />
@@ -151,17 +151,17 @@ export default function Posts() {
                         </span>
                       )}
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        post.status === 'published' ? 'bg-green-100 text-green-700' :
+                        post.status === 'published' ? 'bg-[var(--success-muted)] text-[var(--success)]' :
                         post.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
+                        'bg-[var(--bg-elevated)] text-[var(--text-primary)]'
                       }`}>
                         {post.status}
                       </span>
-                      <span className="bg-gray-100 px-2 py-1 rounded-full text-xs capitalize">
+                      <span className="bg-[var(--bg-elevated)] px-2 py-1 rounded-full text-xs capitalize">
                         {post.platform}
                       </span>
                       {post.property_id && propertyLabel(post.property_id) && (
-                        <span className="flex items-center bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs">
+                        <span className="flex items-center bg-[var(--warning-muted)] text-[var(--warning)] px-2 py-1 rounded-full text-xs">
                           <Home size={12} className="mr-1" />
                           {propertyLabel(post.property_id)}
                         </span>
@@ -171,7 +171,7 @@ export default function Posts() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleDelete(post.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition"
+                      className="p-2 hover:bg-[var(--error-muted)] rounded-lg text-[var(--error)] transition"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -186,32 +186,32 @@ export default function Posts() {
       {/* Create Post Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Schedule New Post</h2>
+          <div className="bg-[var(--bg-card)] rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Schedule New Post</h2>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Content
                   </label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
                     placeholder="What do you want to share?"
                     required
                   />
-                  <p className="text-xs text-gray-400 mt-1">{formData.content.length} characters</p>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-1">{formData.content.length} characters</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Platform
                   </label>
                   <select
                     value={formData.platform}
                     onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 capitalize"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 capitalize"
                   >
                     {PLATFORMS.map((p) => (
                       <option key={p} value={p}>{p}</option>
@@ -220,13 +220,13 @@ export default function Posts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Account
                   </label>
                   <select
                     value={formData.account_id}
                     onChange={(e) => setFormData({ ...formData, account_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select connected account (optional)</option>
                     {accounts
@@ -238,20 +238,20 @@ export default function Posts() {
                       ))}
                   </select>
                   {accounts.filter((a) => a.platform === formData.platform).length === 0 && (
-                    <p className="text-xs text-amber-600 mt-1">
+                    <p className="text-xs text-[var(--warning)] mt-1">
                       No {formData.platform} account connected yet. You can still save a draft.
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Linked Property (optional)
                   </label>
                   <select
                     value={formData.property_id}
                     onChange={(e) => setFormData({ ...formData, property_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">None</option>
                     {properties.map((p) => (
@@ -263,14 +263,14 @@ export default function Posts() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Schedule Time
                   </label>
                   <input
                     type="datetime-local"
                     value={formData.scheduled_time}
                     onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -278,14 +278,14 @@ export default function Posts() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                    className="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] rounded-lg transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center"
+                    className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg hover:bg-[var(--brand-primary-hover)] transition disabled:opacity-50 flex items-center"
                   >
                     <Send size={18} className="mr-2" />
                     {loading ? 'Scheduling...' : 'Schedule Post'}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -37,11 +37,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-4 relative overflow-hidden">
       {/* glow */}
-      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[#0A5BFF] opacity-20 blur-[120px] rounded-full" />
+      <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-[var(--brand-primary)] opacity-20 blur-[120px] rounded-full" />
       <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-violet-600 opacity-15 blur-[120px] rounded-full" />
-      <div className="bg-[#0f172a] border border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
         <div className="flex justify-center mb-8">
           <Logo size={58} dark />
         </div>
@@ -107,7 +107,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0A5BFF] text-white py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-50 font-medium shadow shadow-blue-900/30"
+            className="w-full bg-[var(--brand-primary)] text-white py-2.5 rounded-lg hover:bg-[var(--brand-primary-hover)] transition flex items-center justify-center disabled:opacity-50 font-medium shadow shadow-blue-900/30"
           >
             <LogIn size={20} className="mr-2" />
             {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
@@ -117,7 +117,7 @@ export default function Login() {
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-[#0A5BFF] hover:text-blue-400 text-sm"
+            className="text-[var(--brand-primary)] hover:text-blue-400 text-sm"
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>

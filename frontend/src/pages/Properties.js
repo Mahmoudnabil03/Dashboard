@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home, Plus, Trash2, Edit2, Bed, Bath, Maximize, MapPin,
@@ -19,9 +19,9 @@ const emptyForm = {
 };
 
 const statusStyles = {
-  available: 'bg-green-100 text-green-700',
-  pending: 'bg-amber-100 text-amber-700',
-  sold: 'bg-gray-200 text-gray-600',
+  available: 'bg-[var(--success-muted)] text-[var(--success)]',
+  pending: 'bg-[var(--warning-muted)] text-[var(--warning)]',
+  sold: 'bg-gray-200 text-[var(--text-secondary)]',
 };
 
 function formatPrice(price) {
@@ -181,12 +181,12 @@ export default function Properties() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Properties</h1>
-          <p className="text-gray-500">{properties.length} listing{properties.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">Properties</h1>
+          <p className="text-[var(--text-secondary)]">{properties.length} listing{properties.length !== 1 ? 's' : ''}</p>
         </div>
         <button
           onClick={openCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition"
+          className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg flex items-center hover:bg-[var(--brand-primary-hover)] transition"
         >
           <Plus size={20} className="mr-2" />
           Add Property
@@ -194,18 +194,18 @@ export default function Properties() {
       </div>
 
       {properties.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 text-center py-16 text-gray-500">
-          <Home size={48} className="mx-auto mb-4 text-gray-300" />
+        <div className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-subtle)] text-center py-16 text-[var(--text-secondary)]">
+          <Home size={48} className="mx-auto mb-4 text-[var(--text-tertiary)]" />
           <p>No properties yet</p>
-          <button onClick={openCreate} className="mt-4 text-blue-600 hover:text-blue-700">
+          <button onClick={openCreate} className="mt-4 text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]">
             Add your first listing
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {properties.map((p) => (
-            <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-              <div className="relative h-44 bg-gray-100">
+            <div key={p.id} className="bg-[var(--bg-card)] rounded-xl shadow-sm border border-[var(--border-subtle)] overflow-hidden flex flex-col">
+              <div className="relative h-44 bg-[var(--bg-elevated)]">
                 {p.image_urls && p.image_urls.length > 0 ? (
                   <img
                     src={p.image_urls[0]}
@@ -214,31 +214,31 @@ export default function Properties() {
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <div className="w-full h-full flex items-center justify-center text-[var(--text-tertiary)]">
                     <Home size={40} />
                   </div>
                 )}
-                <span className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[p.status] || 'bg-gray-100 text-gray-700'}`}>
+                <span className={`absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-medium capitalize ${statusStyles[p.status] || 'bg-[var(--bg-elevated)] text-[var(--text-primary)]'}`}>
                   {p.status}
                 </span>
-                <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-700 capitalize">
+                <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium bg-[var(--bg-card)]/90 text-[var(--text-primary)] capitalize">
                   {p.property_type}
                 </span>
               </div>
 
               <div className="p-5 flex-1 flex flex-col">
                 <div className="flex items-start justify-between">
-                  <h3 className="font-semibold text-gray-800 line-clamp-1">{p.title || 'Untitled listing'}</h3>
-                  <span className="text-blue-600 font-bold whitespace-nowrap ml-2">{formatPrice(p.price)}</span>
+                  <h3 className="font-semibold text-[var(--text-primary)] line-clamp-1">{p.title || 'Untitled listing'}</h3>
+                  <span className="text-[var(--brand-primary)] font-bold whitespace-nowrap ml-2">{formatPrice(p.price)}</span>
                 </div>
                 {(p.address || p.city) && (
-                  <p className="text-sm text-gray-500 flex items-center mt-1">
+                  <p className="text-sm text-[var(--text-secondary)] flex items-center mt-1">
                     <MapPin size={14} className="mr-1 flex-shrink-0" />
                     <span className="line-clamp-1">{[p.address, p.city, p.state].filter(Boolean).join(', ')}</span>
                   </p>
                 )}
 
-                <div className="flex items-center gap-4 text-sm text-gray-600 mt-3">
+                <div className="flex items-center gap-4 text-sm text-[var(--text-secondary)] mt-3">
                   {p.bedrooms != null && <span className="flex items-center"><Bed size={16} className="mr-1" />{p.bedrooms}</span>}
                   {p.bathrooms != null && <span className="flex items-center"><Bath size={16} className="mr-1" />{p.bathrooms}</span>}
                   {p.sqft != null && <span className="flex items-center"><Maximize size={16} className="mr-1" />{Number(p.sqft).toLocaleString()} ft²</span>}
@@ -248,7 +248,7 @@ export default function Properties() {
                   <select
                     value={p.status}
                     onChange={(e) => changeStatus(p.id, e.target.value)}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 capitalize focus:ring-2 focus:ring-blue-500"
+                    className="text-xs border border-[var(--border-subtle)] rounded-lg px-2 py-1 capitalize focus:ring-2 focus:ring-blue-500"
                   >
                     {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -261,10 +261,10 @@ export default function Properties() {
                     >
                       <Sparkles size={16} />
                     </button>
-                    <button onClick={() => openEdit(p)} title="Edit" className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                    <button onClick={() => openEdit(p)} title="Edit" className="p-2 rounded-lg hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)]">
                       <Edit2 size={16} />
                     </button>
-                    <button onClick={() => handleDelete(p.id)} title="Delete" className="p-2 rounded-lg hover:bg-red-50 text-red-500">
+                    <button onClick={() => handleDelete(p.id)} title="Delete" className="p-2 rounded-lg hover:bg-[var(--error-muted)] text-[var(--error)]">
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -278,128 +278,128 @@ export default function Properties() {
       {/* Add / Edit Property Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--bg-card)] rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">{editingId ? 'Edit Property' : 'Add Property'}</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">{editingId ? 'Edit Property' : 'Add Property'}</h2>
+              <button onClick={() => setShowModal(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><X size={24} /></button>
             </div>
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Title</label>
                 <input
                   type="text" value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="Charming 3BR bungalow with garden" required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Address</label>
                 <input
                   type="text" value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="123 Main St"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">City</label>
                   <input type="text" value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">State</label>
                   <input type="text" value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ZIP</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">ZIP</label>
                   <input type="text" value={formData.zip}
                     onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Price ($)</label>
                   <input type="number" min="0" value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Beds</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Beds</label>
                   <input type="number" min="0" value={formData.bedrooms}
                     onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Baths</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Baths</label>
                   <input type="number" min="0" step="0.5" value={formData.bathrooms}
                     onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sqft</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Sqft</label>
                   <input type="number" min="0" value={formData.sqft}
                     onChange={(e) => setFormData({ ...formData, sqft: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Type</label>
                   <select value={formData.property_type}
                     onChange={(e) => setFormData({ ...formData, property_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
                     {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Status</label>
                   <select value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
                     {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Description</label>
                 <textarea value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500" rows="3"
                   placeholder="Highlight the standout selling points..." />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Features <span className="text-gray-400">(comma separated)</span></label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Features <span className="text-[var(--text-tertiary)]">(comma separated)</span></label>
                 <input type="text" value={formData.features}
                   onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="Pool, Renovated kitchen, 2-car garage" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URLs <span className="text-gray-400">(comma separated)</span></label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Image URLs <span className="text-[var(--text-tertiary)]">(comma separated)</span></label>
                 <input type="text" value={formData.image_urls}
                   onChange={(e) => setFormData({ ...formData, image_urls: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="https://.../photo1.jpg, https://.../photo2.jpg" />
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancel</button>
+                  className="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] rounded-lg transition">Cancel</button>
                 <button type="submit" disabled={saving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                  className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg hover:bg-[var(--brand-primary-hover)] transition disabled:opacity-50">
                   {saving ? 'Saving...' : editingId ? 'Update Property' : 'Add Property'}
                 </button>
               </div>
@@ -411,30 +411,30 @@ export default function Properties() {
       {/* Listing-to-Post Generator Modal */}
       {genProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--bg-card)] rounded-xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center">
                 <Sparkles size={22} className="mr-2 text-purple-500" />
                 Generate Post
               </h2>
-              <button onClick={() => setGenProperty(null)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
+              <button onClick={() => setGenProperty(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"><X size={24} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">{genProperty.title || genProperty.address}</p>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">{genProperty.title || genProperty.address}</p>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Platform</label>
                 <select value={genPlatform}
                   onChange={(e) => setGenPlatform(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
                   {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tone</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Tone</label>
                 <select value={genTone}
                   onChange={(e) => setGenTone(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 capitalize">
                   {TONES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
@@ -444,11 +444,11 @@ export default function Properties() {
               <textarea
                 value={genContent}
                 onChange={(e) => setGenContent(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[180px] whitespace-pre-wrap"
+                className="w-full px-3 py-2 border border-[var(--border-default)] rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[180px] whitespace-pre-wrap"
                 placeholder={generating ? 'Generating...' : 'Generated caption will appear here'}
               />
               {generating && (
-                <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-lg">
+                <div className="absolute inset-0 bg-[var(--bg-card)]/60 flex items-center justify-center rounded-lg">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                 </div>
               )}
@@ -458,14 +458,14 @@ export default function Properties() {
               <button
                 onClick={() => generatePost(genProperty, genPlatform, genTone)}
                 disabled={generating}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--bg-elevated)] text-[var(--text-primary)] rounded-lg hover:bg-gray-200 transition flex items-center disabled:opacity-50"
               >
                 <RefreshCw size={16} className="mr-2" /> Regenerate
               </button>
               <button
                 onClick={scheduleGeneratedPost}
                 disabled={!genContent || generating}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg hover:bg-[var(--brand-primary-hover)] transition flex items-center justify-center disabled:opacity-50"
               >
                 <Send size={16} className="mr-2" /> Schedule this Post
               </button>

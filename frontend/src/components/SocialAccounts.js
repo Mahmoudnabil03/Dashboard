@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Twitter, Instagram, Facebook, Linkedin, Plus, Trash2, Check, Loader, MessageCircle, Music2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -102,7 +102,7 @@ export default function SocialAccounts() {
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader className="animate-spin text-blue-600" size={32} />
+        <Loader className="animate-spin text-[var(--brand-primary)]" size={32} />
       </div>
     );
   }
@@ -110,9 +110,9 @@ export default function SocialAccounts() {
   const platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'whatsapp', 'tiktok'];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e3e3e2] p-6">
-      <h2 className="text-lg font-semibold text-[#292827] mb-4">Connected Accounts</h2>
-      <p className="text-sm text-[#666666] mb-4">Connect your social apps. OAuth callback: this hosted Worker URL. WhatsApp uses Meta Business Login; TikTok requires a TikTok developer app.</p>
+    <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-6">
+      <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Connected Accounts</h2>
+      <p className="text-sm text-[var(--text-secondary)] mb-4">Connect your social apps. OAuth callback: this hosted Worker URL. WhatsApp uses Meta Business Login; TikTok requires a TikTok developer app.</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {platforms.map((platform) => {
@@ -125,7 +125,7 @@ export default function SocialAccounts() {
             <div
               key={platform}
               className={`p-4 border rounded-xl transition ${
-                isConnected ? 'border-[#714cb6] bg-[#d4c7ff]/30' : 'border-[#e3e3e2] bg-[#f2f0eb] hover:border-[#714cb6]'
+                isConnected ? 'border-[var(--brand-secondary)] bg-[var(--brand-primary-muted)]' : 'border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-[var(--brand-secondary)]'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -134,14 +134,14 @@ export default function SocialAccounts() {
                     <Icon size={20} />
                   </div>
                   <div>
-                    <p className="font-medium text-[#292827] capitalize">{platform}</p>
+                    <p className="font-medium text-[var(--text-primary)] capitalize">{platform}</p>
                     {isConnected ? (
-                      <p className="text-sm text-[#0c4243] flex items-center">
+                      <p className="text-sm text-[var(--success)] flex items-center">
                         <Check size={14} className="mr-1" />
                         Connected as @{account.username}
                       </p>
                     ) : (
-                      <p className="text-sm text-[#666666]">Not connected</p>
+                      <p className="text-sm text-[var(--text-secondary)]">Not connected</p>
                     )}
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function SocialAccounts() {
                 {isConnected ? (
                   <button
                     onClick={() => disconnectAccount(account.id, platform)}
-                    className="p-2 text-[#421d24] hover:bg-[#f2f0eb] rounded-lg transition"
+                    className="p-2 text-[var(--error)] hover:bg-[var(--bg-elevated)] rounded-lg transition"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -157,7 +157,7 @@ export default function SocialAccounts() {
                   <button
                     onClick={() => connectAccount(platform)}
                     disabled={connecting === platform}
-                    className="px-4 py-2 bg-[#0A5BFF] text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center disabled:opacity-50"
+                    className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg hover:bg-[var(--brand-primary-hover)] transition text-sm flex items-center disabled:opacity-50"
                   >
                     {connecting === platform ? (
                       <Loader size={16} className="animate-spin mr-2" />
