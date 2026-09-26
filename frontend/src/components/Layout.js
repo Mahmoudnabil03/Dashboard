@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import Logo from './Logo';
 import LegalFooter from './LegalFooter';
 import {
   LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut, BarChart3, Inbox, Settings,
-  Target, FileText, Menu, X, Users, CreditCard,
+  Target, FileText, Menu, X, Users, CreditCard, Globe, Home, UserCheck,
 } from 'lucide-react';
 
 const navItems = [
@@ -21,6 +21,9 @@ const navItems = [
   { to: '/reports', label: 'Reports', icon: FileText },
   { to: '/team', label: 'Team', icon: Users },
   { to: '/billing', label: 'Billing', icon: CreditCard },
+  { to: '/leads', label: 'Leads', icon: UserCheck },
+  { to: '/properties', label: 'Properties', icon: Home },
+  { to: '/websites', label: 'Websites', icon: Globe },
   { to: '/accounts', label: 'Accounts', icon: Link2 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];

@@ -17,6 +17,9 @@ import Content from './pages/Content';
 import Reports from './pages/Reports';
 import Team from './pages/Team';
 import Billing from './pages/Billing';
+import Leads from './pages/Leads';
+import Properties from './pages/Properties';
+import Websites from './pages/Websites';
 import Legal from './pages/Legal';
 import Layout from './components/Layout';
 
@@ -95,6 +98,9 @@ function App() {
                 <Route path="reports" element={<Reports />} />
                 <Route path="team" element={<Team />} />
                 <Route path="billing" element={<Billing />} />
+                <Route path="leads" element={<Leads />} />
+                <Route path="properties" element={<Properties />} />
+                <Route path="websites" element={<Websites />} />
               </Route>
             </Route>
           </Routes>
