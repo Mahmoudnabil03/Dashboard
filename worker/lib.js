@@ -164,3 +164,25 @@ export async function openaiChat(env, messages, maxTokens = 500) {
   const data = await resp.json();
   return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
 }
+
+// ============================================
+// Structured logging (LOG_LEVEL=silent|error|info|debug)
+// ============================================
+const LOG_LEVELS = { silent: 0, error: 1, info: 2, debug: 3 };
+
+export function createLogger(env) {
+  const level = LOG_LEVELS[String((env && env.LOG_LEVEL) || "info").toLowerCase()] ?? 2;
+  const emit = (lv, stage, data) => {
+    if (LOG_LEVELS[lv] > level) return;
+    try {
+      console.log(JSON.stringify({ ts: new Date().toISOString(), level: lv, stage, ...(data || {}) }));
+    } catch {
+      console.log(`[${lv}] ${stage}`);
+    }
+  };
+  return {
+    debug: (stage, data) => emit("debug", stage, data),
+    info: (stage, data) => emit("info", stage, data),
+    error: (stage, data) => emit("error", stage, data),
+  };
+}
