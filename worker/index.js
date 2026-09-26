@@ -17,7 +17,7 @@ import reports from './routes/reports.js';
 const app = new Hono();
 
 // CORS for the API (harmless same-origin; enables cross-origin dev clients).
-app.use('/api/*', cors());
+app.use('/api/*', cors({ origin: ['https://dashboard.mahmoudnabil03.workers.dev', 'http://localhost:3000', 'http://localhost:8787'], allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], allowHeaders: ['Content-Type', 'Authorization'], maxAge: 86400 }));
 
 app.get('/api/health', (c) => c.json({ status: 'ok' }));
 

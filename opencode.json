@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "socialhub": {
+      "type": "local",
+      "command": ["node", "mcp-server/dist/index.js"],
+      "enabled": true,
+      "environment": {
+        "SOCIALHUB_API_URL": "https://dashboard.mahmoudnabil03.workers.dev",
+        "SOCIALHUB_API_TOKEN": "{env:SOCIALHUB_API_TOKEN}"
+      }
+    },
+    "cloudflare-ai-gateway": {
+      "type": "remote",
+      "url": "https://ai-gateway.mcp.cloudflare.com/mcp",
+      "enabled": true,
+      "oauth": {}
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true
+    }
+  }
+}
