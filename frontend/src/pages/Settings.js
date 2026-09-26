@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Building2, Palette, Link2, Bot, Bell, Users, CreditCard, 
   Save, Loader, AlertCircle, CheckCircle, Trash2, Eye, EyeOff,
@@ -71,7 +71,7 @@ export default function Settings() {
 
   const fetchBusinessSettings = async () => {
     try {
-      const res = await api.get('/workspaces/current');
+      const res = await api.get('/workspace/current');
       if (res.data) {
         setBusiness({
           name: res.data.name || '',
@@ -110,7 +110,7 @@ export default function Settings() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put('/workspaces/current', { ...business, ...brand });
+      await api.put('/workspace/current', { ...business, ...brand });
       toast.success('Settings saved successfully');
     } catch (error) {
       toast.error('Failed to save settings');

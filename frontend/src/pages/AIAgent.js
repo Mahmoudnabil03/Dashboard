@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Plus, Settings, Zap, Sparkles, Power, Trash2, Send, Loader2, Copy, ThumbsUp, ThumbsDown, Mic, MicOff, FileText, Image, Video, Smile } from 'lucide-react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { Bot, Plus, Settings, Zap, Sparkles, Power, Trash2, Send, Loader2, Copy, ThumbsUp, ThumbsDown, Mic, MicOff, FileText, Image, Video, Smile, X, BarChart3, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import api from '../api';

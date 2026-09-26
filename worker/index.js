@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import auth from './routes/auth.js';
 import properties from './routes/properties.js';
@@ -11,6 +11,8 @@ import workspace from './routes/workspace.js';
 import websites from './routes/websites.js';
 import campaigns from './routes/campaigns.js';
 import content from './routes/content.js';
+import billing from './routes/billing.js';
+import reports from './routes/reports.js';
 
 const app = new Hono();
 
@@ -31,6 +33,10 @@ app.route('/api/workspace', workspace);
 app.route('/api/websites', websites);
 app.route('/api/campaigns', campaigns);
 app.route('/api/content', content);
+app.route('/api/subscription', billing);
+app.route('/api/invoices', billing);
+app.route('/api/payment-methods', billing);
+app.route('/api/reports', reports);
 
 // Unknown API path -> JSON 404 (so it never falls through to the SPA).
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));

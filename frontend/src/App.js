@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
@@ -72,12 +72,12 @@ function App() {
         <AuthProvider>
           <Toaster position="top-right" />
           <Routes>
-            <Route element={<PublicRoute />}>
-              <Route path="/login" element={<Login />} />
               <Route path="/terms" element={<Legal page="terms" />} />
               <Route path="/privacy" element={<Legal page="privacy" />} />
               <Route path="/cookies" element={<Legal page="cookies" />} />
               <Route path="/compliance" element={<Legal page="compliance" />} />
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<Login />} />
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Layout />}>
