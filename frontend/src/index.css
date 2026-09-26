@@ -98,8 +98,7 @@
 }
 
 /* Light mode (optional - for printing or accessibility) */
-@media (prefers-color-scheme: light) {
-  :root {
+:root[data-theme="light"] {
     --bg-base: #f8fafc;
     --bg-elevated: #ffffff;
     --bg-elevated-hover: #f1f5f9;
@@ -120,7 +119,6 @@
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
-}
 
 *, *::before, *::after {
   box-sizing: border-box;

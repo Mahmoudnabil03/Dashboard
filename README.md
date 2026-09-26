@@ -1,174 +1,77 @@
-# EstateHub — Real Estate Social Media Manager
+﻿# SocialHub - Manage. Connect. Grow.
 
-Manage a real estate company's social presence from one dashboard: property
-listings, AI-generated listing posts, a content calendar, lead capture, and
-comment management across Twitter/X, Instagram, Facebook, and LinkedIn.
+All-in-one social media command center: connect accounts, schedule content,
+track pixels and conversions, run campaigns, and work with an AI marketing
+co-pilot. Live at https://dashboard.mahmoudnabil03.workers.dev/
 
-Runs entirely on **Cloudflare's free tier** as a single full-stack Worker:
-a [Hono](https://hono.dev) API + [D1](https://developers.cloudflare.com/d1/)
-(SQLite) database, serving a React single-page app from the same origin.
+## Stack
 
----
+- Frontend: React 18 SPA (react-router, TanStack Query, recharts, Tailwind)
+- Backend: Cloudflare Worker (Hono) plus D1 database, Workers AI binding
+- Deploy: single Worker serves `/api/*` and the SPA bundle (`wrangler.jsonc`)
 
-## Features
-
-- **Dashboard hub** — KPIs, listings-by-status and lead-pipeline charts, upcoming posts, connected accounts
-- **Properties** — full CRUD listings manager (photos, price, beds/baths, status)
-- **Listing → post generator** — AI-written, platform-tailored captions (falls back to a smart template if no OpenAI key)
-- **Content calendar** — month view of scheduled posts, per-platform
-- **Leads** — pipeline board (new → contacted → qualified → closed → lost); convert comments into leads
-- **Comments** — AI-assisted replies
-- **Accounts** — connect social platforms via OAuth
-
----
-
-## Architecture
-
-```
-┌─────────────────────────── Cloudflare Worker ("dashboard") ───────────────────────────┐
-│                                                                                        │
-│   /api/*   ──►  Hono router  ──►  D1 (SQLite) database  [binding: DB]                   │
-│   /* (everything else)  ──►  React SPA static assets     [binding: ASSETS, SPA mode]    │
-│                                                                                        │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-| Layer     | Tech                                                              |
-|-----------|-------------------------------------------------------------------|
-| Frontend  | React 18 (CRA), React Router, Tailwind, Recharts, lucide-react    |
-| API       | Hono on Cloudflare Workers                                        |
-| Database  | Cloudflare D1 (SQLite)                                            |
-| Auth      | JWT via `hono/jwt`; passwords hashed with Web Crypto PBKDF2       |
-| AI        | OpenAI REST (optional; template fallback for listing posts)      |
-
-### Project structure
-
-```
-.
-├── wrangler.jsonc          # Worker config (main, D1 + ASSETS bindings)
-├── schema.sql              # D1 schema
-├── package.json            # Worker deps (hono) + wrangler
-├── worker/
-│   ├── index.js            # Hono app: mounts /api/* + serves SPA
-│   ├── lib.js              # JWT/PBKDF2 auth, D1 JSON helpers, OpenAI helper
-│   └── routes/             # auth, properties, leads, posts, ai, social
-└── frontend/
-    ├── src/                # React app (api.js -> same-origin /api)
-    └── build/              # CRA output (generated; uploaded as static assets)
-```
-
----
-
-## Prerequisites
-
-- Node.js 22+ (Wrangler requires Node ≥ 22)
-- A Cloudflare account
-- (Optional) An OpenAI API key for live AI generation
-
----
-
-## Deploy to Cloudflare
-
-The repo is connected to a Cloudflare **Workers** project (GitHub-linked builds).
-
-### One-time setup
-
-1. **Create the D1 database** (or via the dashboard → Storage & Databases → D1):
-   ```bash
-   npx wrangler login
-   npx wrangler d1 create aqarx-db
-   ```
-
-2. **Paste the returned `database_id`** into `wrangler.jsonc`
-   The repository is already configured with the database ID supplied for `aqarx-db`.
-
-3. **Create the tables** in the remote database:
-   ```bash
-   npx wrangler d1 execute aqarx-db --remote --file=./schema.sql
-   ```
-
-4. **Set variables & secrets** (dashboard → your Worker → Settings → Variables and Secrets):
-
-   | Name | Required | Purpose |
-   |------|----------|---------|
-   | `JWT_SECRET` | **Yes** | signs auth tokens — a long random string |
-   | `OPENAI_API_KEY` | No | live AI copy (otherwise listing posts use a template) |
-   | `OPENAI_MODEL` | No | defaults to `gpt-4o-mini` |
-   | `FRONTEND_URL` | No | OAuth redirect base (defaults to request origin) |
-   | `TWITTER_CLIENT_ID` / `TWITTER_CLIENT_SECRET` | No | Twitter/X OAuth |
-   | `INSTAGRAM_CLIENT_ID` / `INSTAGRAM_CLIENT_SECRET` | No | Instagram OAuth |
-   | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | No | Facebook OAuth |
-   | `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET` | No | LinkedIn OAuth |
-
-5. **Build & deploy settings** (dashboard → Settings → Build):
-   - **Root directory:** `/`
-   - **Build command:** `npm install && cd frontend && npm install && npm run build`
-   - **Deploy command:** `npx wrangler deploy`
-
-### Every deploy
-
-Push to the connected branch:
-
-```bash
-git add -A
-git commit -m "your message"
-git push
-```
-
-Cloudflare then: installs deps → builds the React app → `wrangler deploy`
-bundles the Worker and uploads `frontend/build` as static assets.
-
----
-
-## Local development
-
-Full-stack (Worker + local D1 + built SPA):
+## Quick start
 
 ```bash
 npm install
-cd frontend && npm install && npm run build && cd ..
-npm run db:local          # apply schema.sql to a local D1
-npx wrangler dev          # serves API + SPA at http://localhost:8787
+cp .env.example .dev.vars   # fill local values, never commit secrets
+npx wrangler d1 execute aqarx-db --local --file=./schema.sql
+cd frontend && npm install && npm start
+npx wrangler dev            # serves API on :8787 (set REACT_APP_API_URL)
 ```
 
-Create a `.dev.vars` file in the repo root for local secrets (gitignored):
+## Scripts (repo root)
 
-```
-JWT_SECRET=dev-secret-change-me
-OPENAI_API_KEY=sk-...
-```
+- `npm run dev` - wrangler dev
+- `npm run build` - production frontend build
+- `npm run deploy` - build plus wrangler deploy
+- `npm run db:local` / `npm run db:remote` - apply `schema.sql`
 
-Frontend-only with hot reload (point CRA at the running Worker):
+## Secrets (production via `wrangler secret put`)
 
-```bash
-cd frontend
-set REACT_APP_API_URL=http://localhost:8787/api   # PowerShell: $env:REACT_APP_API_URL="..."
-npm start
-```
+Required: `JWT_SECRET`, `FRONTEND_URL`.
+Social OAuth: `TWITTER_CLIENT_ID/SECRET`, `FACEBOOK_CLIENT_ID/SECRET`,
+`INSTAGRAM_CLIENT_ID/SECRET`, `LINKEDIN_CLIENT_ID/SECRET`, `TIKTOK_CLIENT_KEY/SECRET`.
+Webhooks: `*_WEBHOOK_VERIFY_TOKEN` per platform (any random string).
+AI: Workers AI binding is primary (no secret); optional `AI_MODEL`, `OPENAI_API_KEY`.
+Email: `EMAIL_PROVIDER=mock` logs to console; `resend` plus `RESEND_API_KEY` sends.
+See `.env.example`. Rotate `JWT_SECRET` with care: it signs every session.
 
----
+## Key flows
 
-## API overview
+- Auth: register (email verification link, 24h) -> verify -> login (httpOnly
+  `sh_token` cookie plus in-memory Bearer; old localStorage sessions migrate once).
+- Password reset: 1-hour token links, no account enumeration.
+- Social: Accounts page Connect buttons -> OAuth popup -> callback stores
+  page/channel tokens server-side. Webhooks per platform with verify tokens.
+- Tracking: Settings -> Integrations for Meta Pixel/CAPI, GA4, GTM, TikTok,
+  LinkedIn, Snapchat, Pinterest (add/edit/test/delete).
+- Content: Posts, drag-and-drop Calendar reschedule, Content ideas, Campaigns.
+- AI: chat co-pilot, reply drafts, suggestions, comment tone/spam check.
+- Team roles: owner, admin, manager, analyst, content. Billing plans gate usage.
 
-All routes are under `/api`. Protected routes require `Authorization: Bearer <token>`.
+## MCP for AI assistants
 
-| Group | Endpoints |
-|-------|-----------|
-| Auth | `POST /auth/register`, `POST /auth/login` |
-| Properties | `GET/POST /properties`, `GET/PUT/DELETE /properties/:id`, `PATCH /properties/:id/status`, `GET /properties/stats/summary` |
-| Posts | `GET/POST /posts`, `PATCH /posts/:id/status`, `DELETE /posts/:id` |
-| Leads | `GET/POST /leads`, `POST /leads/from-comment`, `GET/PUT/DELETE /leads/:id`, `PATCH /leads/:id/status`, `GET /leads/stats/summary` |
-| AI | `POST /ai/generate-listing-post`, `POST /ai/generate-content`, `POST /ai/suggestions`, `POST /ai/reply-comment`, `GET/POST /ai/agents` |
-| Social | `GET /social/accounts`, `DELETE /social/accounts/:id`, `GET /social/comments/:postId`, `POST /social/comments/reply`, `GET /social/:platform/auth`, `GET /social/:platform/callback` |
+`mcp-server/` exposes the live API over MCP (40+ tools). Project `opencode.json`
+wires `socialhub` (local), `cloudflare-ai-gateway`, and `github` (OAuth on
+restart). Set `SOCIALHUB_API_TOKEN` to a login JWT after restart.
 
----
+## Compliance
 
-## Notes & limitations
+Terms, Privacy, Cookies, and Egypt Law 151/2020 compliance pages ship in-app
+(`/terms`, `/privacy`, `/cookies`, `/compliance`). Data: D1 (AWS Bahrain
+region account), TLS 1.3, AES-256 at rest, PBKDF2 passwords.
 
-- **Free-tier friendly:** D1 free tier includes 5 GB storage and 5M row reads/day.
-- **Comment ingestion** is not automated yet — the `comments` table needs a
-  platform webhook or polling job to populate it before replies/lead-conversion
-  have data to work with.
-- **Social OAuth** requires registering real apps with each platform and setting
-  the client ID/secret variables; the Twitter flow uses a placeholder PKCE
-  challenge and needs hardening for production.
+## Docs
+
+- `IMPROVEMENTS.md` - hardening backlog tracker (source of truth for P0-P3).
+- `mcp-server/README.md` - MCP setup and tool catalog.
+- `schema.sql` - full D1 schema including auth hardening tables.
+
+## Operations
+
+- Logs: every Worker execution emits JSON lines with run_id (start/end/error stages).
+- Alerts (Cloudflare dashboard, manual setup): 5xx spike alert on the
+  dashboard Worker, Workers AI usage/budget alert, D1 slow-query review,
+  auth-failure review via dashboard_rate_events growth.
+- TypeScript: incremental plan in TYPESCRIPT.md (repo is currently JS).

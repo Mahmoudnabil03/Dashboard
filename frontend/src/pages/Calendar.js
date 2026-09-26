@@ -50,6 +50,19 @@ export default function Calendar() {
   // Only posts that actually have a scheduled time belong on the calendar.
   const scheduledPosts = posts.filter((p) => p.scheduled_time);
 
+  const movePost = async (postId, day) => {
+    const post = posts.find((x) => String(x.id) === String(postId));
+    if (!post || !post.scheduled_time) return;
+    try {
+      const prev = parseISO(post.scheduled_time);
+      const next = new Date(day);
+      next.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
+      await api.put(`/posts/${postId}`, { scheduled_time: next.toISOString() });
+      toast.success("Post rescheduled to " + format(next, "MMM d"));
+      fetchData();
+    } catch { toast.error("Could not reschedule post"); }
+  };
+
   const postsForDay = (day) =>
     scheduledPosts.filter((p) => {
       try {
@@ -120,6 +133,8 @@ export default function Calendar() {
                 key={day.toISOString()}
                 className={`min-h-[110px] border-b border-r p-2 last:border-r-0 ${inMonth ? 'bg-[var(--bg-card)]' : 'bg-[var(--bg-elevated)]/50'} ${dayPosts.length ? 'cursor-pointer hover:bg-[var(--brand-primary-muted)]/40' : ''}`}
                 onClick={() => dayPosts.length && setDayModal({ date: day, posts: dayPosts })}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); const id = e.dataTransfer.getData("text/post-id"); if (id) movePost(id, day); }}
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-sm ${today ? 'bg-[var(--brand-primary)] text-white w-6 h-6 flex items-center justify-center rounded-full' : inMonth ? 'text-[var(--text-primary)]' : 'text-[var(--text-tertiary)]'}`}>
@@ -132,7 +147,7 @@ export default function Calendar() {
 
                 <div className="mt-1 space-y-1">
                   {dayPosts.slice(0, 3).map((p) => (
-                    <div key={p.id} className="flex items-center text-[11px] text-[var(--text-secondary)] truncate">
+                    <div key={p.id} draggable onDragStart={(e) => { e.dataTransfer.setData("text/post-id", String(p.id)); e.dataTransfer.effectAllowed = "move"; }} title="Drag to another day to reschedule" className="flex items-center text-[11px] text-[var(--text-secondary)] truncate cursor-grab active:cursor-grabbing">
                       <span className={`w-2 h-2 rounded-full mr-1 flex-shrink-0 ${platformColors[p.platform] || 'bg-gray-400'}`}></span>
                       <span className="truncate">{p.content?.slice(0, 24) || '(no text)'}</span>
                     </div>

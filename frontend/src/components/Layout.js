@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import Logo from './Logo';
 import LegalFooter from './LegalFooter';
+import ThemeToggle from './ThemeToggle';
 import {
   LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut, BarChart3, Inbox, Settings,
   Target, FileText, Menu, X, Users, CreditCard, Globe, Home, UserCheck,
@@ -103,6 +104,7 @@ export default function Layout() {
               <p className="text-xs text-[var(--text-muted)] truncate">{user.email}</p>
             </div>
           )}
+          <ThemeToggle />
           <button
             onClick={handleLogout}
             className="flex items-center px-4 py-3 text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] transition w-full rounded-xl"

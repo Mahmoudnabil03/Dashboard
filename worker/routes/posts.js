@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { authMiddleware, parsePost, toArray, body } from '../lib.js';
 
 const posts = new Hono();
@@ -67,6 +67,21 @@ posts.patch('/:id/status', async (c) => {
     .bind(status, c.req.param('id'), workspaceId)
     .first();
   if (!row) return c.json({ error: 'Post not found' }, 404);
+  return c.json(parsePost(row));
+});
+
+// UPDATE (full edit + reschedule)
+posts.put("/:id", async (c) => {
+  const b = await body(c);
+  const userId = c.get("userId");
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: "Workspace not found" }, 404);
+  const status = b.scheduled_time ? "scheduled" : (b.status || "draft");
+  const row = await c.env.DB
+    .prepare("UPDATE dashboard_posts SET content = COALESCE(?, content), platform = COALESCE(?, platform), scheduled_time = ?, status = ?, account_id = COALESCE(?, account_id), property_id = COALESCE(?, property_id), updated_at = CURRENT_TIMESTAMP WHERE id = ? AND workspace_id = ? RETURNING *")
+    .bind(b.content ?? null, b.platform ?? null, b.scheduled_time ?? null, status, b.account_id ?? null, b.property_id ?? null, c.req.param("id"), workspaceId)
+    .first();
+  if (!row) return c.json({ error: "Post not found" }, 404);
   return c.json(parsePost(row));
 });
 

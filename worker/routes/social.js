@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { authMiddleware, parseAccount, body } from '../lib.js';
 
 const social = new Hono();
@@ -73,6 +73,20 @@ social.get('/inbox', authMiddleware, async (c) => {
      ORDER BY c.replied ASC, c.created_at DESC`
   ).bind(workspaceId).all();
   return c.json(results);
+});
+
+// UPDATE INBOX TICKET (assign, statusworkflow)
+social.patch("/inbox/:id", authMiddleware, async (c) => {
+  const b = await body(c);
+  const userId = c.get("userId");
+  const workspaceId = await getWorkspaceId(c, userId);
+  if (!workspaceId) return c.json({ error: "Workspace not found" }, 404);
+  const status = ["open", "pending", "resolved"].includes(b.ticket_status) ? b.ticket_status : undefined;
+  const row = await c.env.DB.prepare(
+    "UPDATE dashboard_comments SET assignee = COALESCE(?, assignee), ticket_status = COALESCE(?, ticket_status), replied = COALESCE(?, replied), ai_response = COALESCE(?, ai_response) WHERE id = ? AND workspace_id = ? RETURNING *"
+  ).bind(b.assignee ?? null, status ?? null, b.replied ? 1 : null, b.ai_response ?? null, c.req.param("id"), workspaceId).first();
+  if (!row) return c.json({ error: "Ticket not found" }, 404);
+  return c.json(row);
 });
 
 // DISCONNECT

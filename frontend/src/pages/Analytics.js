@@ -72,7 +72,7 @@ export default function Analytics() {
           <h1 className="text-3xl font-[460] text-[var(--text-primary)]">Analytics</h1>
           <p className="text-[var(--text-secondary)] mt-1">Understand publishing activity across your connected channels.</p>
         </div>
-        <select value={period} onChange={(event) => setPeriod(event.target.value)} className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)]">
+        <button onClick={() => { const rows = [["platform", "posts", "published", "scheduled", "draft"], ...platformRows.map((r) => [r.platform, r.posts, r.published, r.scheduled, r.draft])]; downloadCsv("socialhub-analytics.csv", rows); toast.success("Analytics exported as CSV"); }} className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)] hover:border-[var(--brand-primary)] transition">Export CSV</button>`n        <select value={period} onChange={(event) => setPeriod(event.target.value)} className="px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)]">
           {periods.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </div>

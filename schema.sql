@@ -114,6 +114,8 @@ CREATE TABLE IF NOT EXISTS dashboard_comments (
   author TEXT,
   replied INTEGER DEFAULT 0,
   ai_response TEXT,
+  assignee TEXT,
+  ticket_status TEXT DEFAULT 'open',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

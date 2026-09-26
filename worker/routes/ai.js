@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { authMiddleware, openaiChat, parseAgent, parseProperty, body } from '../lib.js';
 
 const ai = new Hono();
@@ -281,4 +281,40 @@ ai.post('/generate-listing-post', async (c) => {
   }
 });
 
+
+// MODERATION: sentiment (Workers AI) plus rule-based spam flags. Never blocks;
+// returns signals the UI can display next to comments/messages.
+ai.post("/moderate", async (c) => {
+  const { text } = await body(c);
+  if (!text || !String(text).trim()) return c.json({ error: "Text is required." }, 400);
+  const t = String(text);
+  const lower = t.toLowerCase();
+
+  const spamReasons = [];
+  const links = (t.match(/https?:\/\/|www\.|\.xyz|\.top|\.click/g) || []).length;
+  if (links >= 2) spamReasons.push("multiple links");
+  const letters = t.replace(/[^A-Za-z]/g, "");
+  if (letters.length > 20 && (t.replace(/[^A-Z]/g, "").length / letters.length) > 0.7) spamReasons.push("excessive caps");
+  if (/(.)\1{5,}/.test(t)) spamReasons.push("repeated characters");
+  const banned = ["free crypto", "double your", "guaranteed profit", "send eth", "send btc", "adult dating", "work from home scam"];
+  if (banned.some((w) => lower.includes(w))) spamReasons.push("known scam phrase");
+  if (/\d{10,}/.test(t.replace(/[\s-]/g, ""))) spamReasons.push("long number string");
+
+  let sentiment = "unknown";
+  let score = null;
+  if (c.env.AI) {
+    try {
+      const out = await c.env.AI.run("@cf/huggingface/distilbert-sst-2-intent-model", { text: t.slice(0, 2000) });
+      const top = Array.isArray(out) ? out[0] : out;
+      if (top && top.label) {
+        sentiment = /pos/i.test(top.label) ? "positive" : "negative";
+        score = typeof top.score === "number" ? Math.round(top.score * 100) / 100 : null;
+      }
+    } catch (err) {
+      try { c.get("log").error("moderate-ai", { message: String(err.message || err) }); } catch {}
+    }
+  }
+
+  return c.json({ sentiment, score, spam: spamReasons.length > 0, spam_reasons: spamReasons });
+});
 export default ai;
