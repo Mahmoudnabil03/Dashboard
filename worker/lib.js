@@ -1,4 +1,4 @@
-import { verify } from 'hono/jwt';
+﻿import { verify } from 'hono/jwt';
 
 // ============================================
 // JSON helpers for D1 TEXT columns
@@ -122,30 +122,45 @@ export async function body(c) {
 }
 
 // ============================================
-// OpenAI chat helper (direct REST via fetch)
+// AI chat helper: Cloudflare Workers AI binding first, OpenAI fallback.
+// Set AI_MODEL secret to override (default: llama-3.1-8b-instruct).
 // ============================================
 export async function openaiChat(env, messages, maxTokens = 500) {
+  if (env.AI) {
+    try {
+      const model = env.AI_MODEL || "@cf/meta/llama-3.1-8b-instruct";
+      const out = await env.AI.run(model, { messages, max_tokens: maxTokens });
+      if (typeof out === "string") return out;
+      if (out && typeof out.response === "string") return out.response;
+      if (out && typeof out.result === "string") return out.result;
+      if (out && out.result && typeof out.result.response === "string") return out.result.response;
+      if (Array.isArray(out)) return out.map((p) => (typeof p === "string" ? p : p.response || p.text || "")).join("");
+      return JSON.stringify(out);
+    } catch (err) {
+      if (!env.OPENAI_API_KEY) throw new Error("Workers AI error: " + (err.message || err));
+    }
+  }
   if (!env.OPENAI_API_KEY) {
-    const err = new Error('OPENAI_API_KEY not configured');
-    err.code = 'NO_KEY';
+    const err = new Error("AI not configured: bind Workers AI or set OPENAI_API_KEY");
+    err.code = "NO_KEY";
     throw err;
   }
-  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + env.OPENAI_API_KEY,
     },
     body: JSON.stringify({
-      model: env.OPENAI_MODEL || 'gpt-4o-mini',
+      model: env.OPENAI_MODEL || "gpt-4o-mini",
       messages,
       max_tokens: maxTokens,
     }),
   });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`OpenAI error ${resp.status}: ${text}`);
+    throw new Error("OpenAI error " + resp.status + ": " + text);
   }
   const data = await resp.json();
-  return data.choices?.[0]?.message?.content || '';
+  return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "dashboard",
   "main": "worker/index.js",
   "compatibility_date": "2025-08-01",
@@ -15,6 +15,7 @@
       "database_id": "8d796cf2-a5a4-486c-b830-62e15077ace8"
     }
   ],
+  "ai": { "binding": "AI" },
   "observability": {
     "enabled": true
   }
