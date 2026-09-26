@@ -4,6 +4,7 @@ import { useAuth } from '../App';
 import Logo from './Logo';
 import {
   LayoutDashboard, Send, CalendarDays, MessageSquare, Bot, Link2, LogOut, BarChart3, Inbox, Settings,
+  Target, FileText,
 } from 'lucide-react';
 
 const navItems = [
@@ -14,6 +15,8 @@ const navItems = [
   { to: '/inbox', label: 'Unified Inbox', icon: Inbox },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/ai-agent', label: 'AI Agent', icon: Bot },
+  { to: '/campaigns', label: 'Campaigns', icon: Target },
+  { to: '/content', label: 'Content', icon: FileText },
   { to: '/accounts', label: 'Accounts', icon: Link2 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];

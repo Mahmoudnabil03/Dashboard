@@ -8,6 +8,9 @@ import ai from './routes/ai.js';
 import social from './routes/social.js';
 import tracking from './routes/tracking.js';
 import workspace from './routes/workspace.js';
+import websites from './routes/websites.js';
+import campaigns from './routes/campaigns.js';
+import content from './routes/content.js';
 
 const app = new Hono();
 
@@ -25,6 +28,9 @@ app.route('/api/ai', ai);
 app.route('/api/social', social);
 app.route('/api/tracking', tracking);
 app.route('/api/workspace', workspace);
+app.route('/api/websites', websites);
+app.route('/api/campaigns', campaigns);
+app.route('/api/content', content);
 
 // Unknown API path -> JSON 404 (so it never falls through to the SPA).
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
